@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AfriWork - Complete Marketplace Demo</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    }
+    .notification {
+      animation: slideIn 0.3s ease-out;
+    }
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Icons (simplified)
+    const Search = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>;
+    const MapPin = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>;
+    const Star = ({ filled }) => <svg width="16" height="16" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>;
+    const User = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>;
+    const Camera = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>;
+    const Edit = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>;
+    const CheckCircle = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>;
+    const X = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
+    const Phone = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>;
+    const MessageCircle = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>;
+    const ThumbsUp = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>;
+    const Settings = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m9-9h-6m-6 0H3m15.364 6.364l-4.243-4.243m-6.364 0L3.636 17.364M17.364 6.636l-4.243 4.243m-6.364 0L3.636 6.636"></path></svg>;
+    const Mail = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>;
+
+    function AfriWorkComplete() {
+      const [lang, setLang] = useState('fr');
+      const [view, setView] = useState('home');
+      const [category, setCategory] = useState('all');
+      const [location, setLocation] = useState('all');
+      const [loggedIn, setLoggedIn] = useState(false);
+      const [userType, setUserType] = useState(null);
+      const [userId, setUserId] = useState(null);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [notification, setNotification] = useState(null);
+      const [showProfileEdit, setShowProfileEdit] = useState(false);
+      const [showReviewModal, setShowReviewModal] = useState(false);
+      const [selectedOrder, setSelectedOrder] = useState(null);
+      const [selectedGig, setSelectedGig] = useState(null);
+      const [showOrderModal, setShowOrderModal] = useState(false);
+      const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+      // ALL 50+ CATEGORIES - COMPLETE LIST
+      const categories = [
+        { id: 'plumbing', fr: 'Plomberie', en: 'Plumbing', icon: '🔧' },
+        { id: 'electrical', fr: 'Électricité', en: 'Electrical', icon: '⚡' },
+        { id: 'tailoring', fr: 'Couture', en: 'Tailoring', icon: '✂️' },
+        { id: 'gardening', fr: 'Jardinage', en: 'Gardening', icon: '🌱' },
+        { id: 'carpentry', fr: 'Menuiserie', en: 'Carpentry', icon: '🪚' },
+        { id: 'painting', fr: 'Peinture', en: 'Painting', icon: '🎨' },
+        { id: 'masonry', fr: 'Maçonnerie', en: 'Masonry', icon: '🧱' },
+        { id: 'welding', fr: 'Soudure', en: 'Welding', icon: '🔥' },
+        { id: 'ac', fr: 'Climatisation', en: 'AC Repair', icon: '❄️' },
+        { id: 'cleaning', fr: 'Nettoyage', en: 'Cleaning', icon: '🧹' },
+        { id: 'moving', fr: 'Déménagement', en: 'Moving', icon: '📦' },
+        { id: 'auto', fr: 'Mécanique Auto', en: 'Auto Repair', icon: '🚗' },
+        { id: 'roofing', fr: 'Toiture', en: 'Roofing', icon: '🏠' },
+        { id: 'tiling', fr: 'Carrelage', en: 'Tiling', icon: '⬜' },
+        { id: 'ironwork', fr: 'Ferronnerie', en: 'Ironwork', icon: '⚒️' },
+        { id: 'glazing', fr: 'Vitrerie', en: 'Glazing', icon: '🪟' },
+        { id: 'hairdressing', fr: 'Coiffure', en: 'Hairdressing', icon: '💇' },
+        { id: 'beauty', fr: 'Esthétique', en: 'Beauty', icon: '💅' },
+        { id: 'massage', fr: 'Massage', en: 'Massage', icon: '💆' },
+        { id: 'carwash', fr: 'Lavage Auto', en: 'Car Wash', icon: '🚙' },
+        { id: 'farming', fr: 'Agriculture', en: 'Farming', icon: '🌾' },
+        { id: 'livestock', fr: 'Élevage', en: 'Livestock', icon: '🐄' },
+        { id: 'fishing', fr: 'Pêche', en: 'Fishing', icon: '🎣' },
+        { id: 'baking', fr: 'Boulangerie', en: 'Baking', icon: '🍞' },
+        { id: 'catering', fr: 'Traiteur', en: 'Catering', icon: '👨‍🍳' },
+        { id: 'shoes', fr: 'Cordonnerie', en: 'Shoe Repair', icon: '👞' },
+        { id: 'upholstery', fr: 'Tapisserie', en: 'Upholstery', icon: '🛋️' },
+        { id: 'locksmith', fr: 'Serrurerie', en: 'Locksmith', icon: '🔐' },
+        { id: 'it', fr: 'Informatique', en: 'IT Repair', icon: '💻' },
+        { id: 'phone', fr: 'Réparation Téléphone', en: 'Phone Repair', icon: '📱' },
+        { id: 'photo', fr: 'Photographie', en: 'Photography', icon: '📷' },
+        { id: 'video', fr: 'Vidéographie', en: 'Videography', icon: '🎥' },
+        { id: 'dj', fr: 'DJ/Sonorisation', en: 'DJ/Sound', icon: '🎧' },
+        { id: 'events', fr: 'Événementiel', en: 'Event Planning', icon: '🎉' },
+        { id: 'decoration', fr: 'Décoration', en: 'Decoration', icon: '🎨' },
+        { id: 'housekeeping', fr: 'Ménage', en: 'Housekeeping', icon: '🧽' },
+        { id: 'ironing', fr: 'Repassage', en: 'Ironing', icon: '👔' },
+        { id: 'laundry', fr: 'Blanchisserie', en: 'Laundry', icon: '🧺' },
+        { id: 'security', fr: 'Sécurité', en: 'Security', icon: '🛡️' },
+        { id: 'delivery', fr: 'Livraison', en: 'Delivery', icon: '🏍️' },
+        { id: 'driver', fr: 'Chauffeur', en: 'Driver', icon: '🚕' },
+        { id: 'blacksmith', fr: 'Forge', en: 'Blacksmith', icon: '🔨' },
+        { id: 'jewelry', fr: 'Bijouterie', en: 'Jewelry', icon: '💍' },
+        { id: 'pottery', fr: 'Poterie', en: 'Pottery', icon: '🏺' },
+        { id: 'basketry', fr: 'Vannerie', en: 'Basketry', icon: '🧺' },
+        { id: 'sculpture', fr: 'Sculpture', en: 'Sculpture', icon: '🗿' },
+        { id: 'tattoo', fr: 'Tatouage', en: 'Tattoo', icon: '✒️' },
+        { id: 'barber', fr: 'Barbier', en: 'Barber', icon: '✂️' },
+        { id: 'manicure', fr: 'Manucure', en: 'Manicure', icon: '💅' },
+        { id: 'pedicure', fr: 'Pédicure', en: 'Pedicure', icon: '🦶' }
+      ];
+
+      const locations = [
+        { id: 'douala', name: 'Douala', country: 'CM' },
+        { id: 'yaounde', name: 'Yaoundé', country: 'CM' },
+        { id: 'bafoussam', name: 'Bafoussam', country: 'CM' },
+        { id: 'bamenda', name: 'Bamenda', country: 'CM' },
+        { id: 'garoua', name: 'Garoua', country: 'CM' },
+        { id: 'maroua', name: 'Maroua', country: 'CM' },
+        { id: 'limbe', name: 'Limbé', country: 'CM' },
+        { id: 'buea', name: 'Buea', country: 'CM' },
+        { id: 'kribi', name: 'Kribi', country: 'CM' },
+        { id: 'ngaoundere', name: 'Ngaoundéré', country: 'CM' },
+        { id: 'abidjan', name: 'Abidjan', country: 'CI' },
+        { id: 'bouake', name: 'Bouaké', country: 'CI' },
+        { id: 'yamoussoukro', name: 'Yamoussoukro', country: 'CI' },
+        { id: 'sanpedro', name: 'San-Pédro', country: 'CI' },
+        { id: 'daloa', name: 'Daloa', country: 'CI' },
+        { id: 'korhogo', name: 'Korhogo', country: 'CI' },
+        { id: 'man', name: 'Man', country: 'CI' },
+        { id: 'gagnoa', name: 'Gagnoa', country: 'CI' }
+      ];
+
+      const [users, setUsers] = useState({
+        'provider1': { 
+          name: 'Jean-Paul M.', 
+          email: 'jeanpaul@example.com',
+          phone: '+237 6 XX XX XX XX', 
+          whatsapp: '+237600000001', 
+          type: 'provider', 
+          balance: 450000, 
+          pendingEarnings: 125000,
+          avatar: null,
+          bio: 'Plombier professionnel avec 10 ans d\'expérience. Service rapide et garanti.',
+          memberSince: 'Jan 2024',
+          totalEarnings: 2450000,
+          completionRate: 98
+        },
+        'client1': { 
+          name: 'Ibrahim D.', 
+          email: 'ibrahim@example.com',
+          phone: '+237 6 XX XX XX XX', 
+          type: 'client', 
+          balance: 0,
+          avatar: null,
+          bio: null,
+          memberSince: 'Mar 2024'
+        }
+      });
+
+      const [gigs, setGigs] = useState([
+        { 
+          id: 1, 
+          title: 'Réparation Plomberie Urgente', 
+          titleEn: 'Emergency Plumbing Repair', 
+          desc: 'Service rapide 24/7. Fuites, débouchage, installation. 10 ans d\'expérience. Garantie 6 mois sur tous les travaux.', 
+          category: 'plumbing', 
+          location: 'douala', 
+          price: 15000, 
+          providerId: 'provider1',
+          rating: 4.9,
+          reviewCount: 47,
+          completionRate: 98,
+          responseTime: '2h',
+          icon: '🔧',
+          reviews: [
+            { 
+              id: 'r1', 
+              clientName: 'Marie K.', 
+              clientAvatar: null,
+              rating: 5, 
+              comment: 'Excellent travail! Très professionnel et rapide. A réparé ma fuite en moins d\'une heure.', 
+              date: '2026-01-20',
+              photos: [],
+              helpful: 12,
+              providerResponse: 'Merci beaucoup Marie! Content d\'avoir pu vous aider rapidement. 😊'
+            },
+            { 
+              id: 'r2', 
+              clientName: 'Paul S.', 
+              clientAvatar: null,
+              rating: 5, 
+              comment: 'Service impeccable. Prix raisonnable. Je recommande vivement!', 
+              date: '2026-01-15',
+              photos: [],
+              helpful: 8,
+              providerResponse: null
+            }
+          ]
+        },
+        { 
+          id: 2, 
+          title: 'Couture Robe Traditionnelle', 
+          titleEn: 'Traditional Dress Making', 
+          desc: 'Robes sur mesure pour mariages, baptêmes, événements. Tissus africains authentiques. Finitions de qualité.', 
+          category: 'tailoring', 
+          location: 'abidjan', 
+          price: 30000, 
+          providerId: 'provider1',
+          rating: 5.0,
+          reviewCount: 89,
+          completionRate: 100,
+          responseTime: '1h',
+          icon: '✂️',
+          reviews: []
+        },
+        { 
+          id: 3, 
+          title: 'Coiffure Professionnelle à Domicile', 
+          titleEn: 'Professional Home Hairdressing', 
+          desc: 'Coiffure, tresses, locks, tissage. Service à domicile disponible. Produits de qualité.', 
+          category: 'hairdressing', 
+          location: 'yaounde', 
+          price: 8000, 
+          providerId: 'provider1',
+          rating: 4.8,
+          reviewCount: 124,
+          completionRate: 97,
+          responseTime: '30min',
+          icon: '💇',
+          reviews: []
+        },
+        { 
+          id: 4, 
+          title: 'Mécanique Auto - Réparation & Entretien', 
+          titleEn: 'Auto Repair & Maintenance', 
+          desc: 'Diagnostic, réparation moteur, entretien, vidange. Toutes marques. Pièces garanties.', 
+          category: 'auto', 
+          location: 'douala', 
+          price: 25000, 
+          providerId: 'provider1',
+          rating: 4.7,
+          reviewCount: 56,
+          completionRate: 95,
+          responseTime: '3h',
+          icon: '🚗',
+          reviews: []
+        }
+      ]);
+
+      const [orders, setOrders] = useState([
+        {
+          id: 'ORD-001',
+          gigId: 1,
+          clientId: 'client1',
+          providerId: 'provider1',
+          status: 'approved',
+          amount: 15000,
+          commission: 2250,
+          processingFee: 300,
+          providerEarnings: 12450,
+          paymentMethod: 'mtnMoney',
+          createdAt: '2026-01-20T10:30:00',
+          completedAt: '2026-01-20T15:00:00',
+          approvedAt: '2026-01-21T09:00:00',
+          hasReview: true,
+          timeline: [
+            { step: 'orderPlaced', completed: true },
+            { step: 'providerNotified', completed: true },
+            { step: 'workInProgress', completed: true },
+            { step: 'deliverySubmitted', completed: true },
+            { step: 'clientReview', completed: true },
+            { step: 'paymentReleased', completed: true }
+          ]
+        }
+      ]);
+
+      const showNotification = (message, type = 'success') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), 4000);
+      };
+
+      const filteredGigs = gigs.filter(g => {
+        const matchesCategory = category === 'all' || g.category === category;
+        const matchesLocation = location === 'all' || g.location === location;
+        const matchesSearch = searchQuery === '' || 
+          g.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          g.titleEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          g.desc.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesLocation && matchesSearch;
+      });
+
+      const handleOrderClick = (gig) => {
+        if (!loggedIn) {
+          showNotification(lang === 'fr' ? 'Veuillez vous connecter pour commander' : 'Please login to order', 'error');
+          setView('login');
+          return;
+        }
+        setSelectedGig(gig);
+        setShowOrderModal(true);
+      };
+
+      const handleConfirmOrder = () => {
+        setShowOrderModal(false);
+        setShowPaymentModal(true);
+      };
+
+      const handlePayment = (paymentMethod) => {
+        const newOrder = {
+          id: `ORD-${Date.now()}`,
+          gigId: selectedGig.id,
+          clientId: userId,
+          providerId: selectedGig.providerId,
+          status: 'inProgress',
+          amount: selectedGig.price,
+          commission: Math.round(selectedGig.price * 0.15),
+          processingFee: Math.round(selectedGig.price * 0.02),
+          providerEarnings: Math.round(selectedGig.price * 0.83),
+          paymentMethod: paymentMethod,
+          createdAt: new Date().toISOString(),
+          hasReview: false,
+          timeline: [
+            { step: 'orderPlaced', completed: true },
+            { step: 'providerNotified', completed: true },
+            { step: 'workInProgress', completed: true },
+            { step: 'deliverySubmitted', completed: false },
+            { step: 'clientReview', completed: false },
+            { step: 'paymentReleased', completed: false }
+          ]
+        };
+
+        setOrders([...orders, newOrder]);
+        setShowPaymentModal(false);
+        
+        // Simulate email confirmation
+        setTimeout(() => {
+          showNotification('📧 Email de confirmation envoyé! / Confirmation email sent!');
+        }, 500);
+        
+        showNotification(lang === 'fr' ? '✅ Commande créée! Paiement sécurisé par Escrow.' : '✅ Order created! Payment secured by Escrow.');
+        setView('orders');
+      };
+
+      const handleApproveWork = (orderId) => {
+        setOrders(orders.map(o => {
+          if (o.id === orderId) {
+            const updatedTimeline = o.timeline.map((t, idx) => 
+              idx >= 3 ? { ...t, completed: true } : t
+            );
+            
+            // Update provider balance
+            setUsers(prev => ({
+              ...prev,
+              [o.providerId]: {
+                ...prev[o.providerId],
+                balance: prev[o.providerId].balance + o.providerEarnings,
+                pendingEarnings: prev[o.providerId].pendingEarnings - o.providerEarnings
+              }
+            }));
+            
+            return { ...o, status: 'approved', approvedAt: new Date().toISOString(), timeline: updatedTimeline };
+          }
+          return o;
+        }));
+        
+        showNotification(lang === 'fr' ? '✅ Paiement libéré! Email envoyé au prestataire.' : '✅ Payment released! Email sent to provider.');
+        
+        // Show review modal after approval
+        const order = orders.find(o => o.id === orderId);
+        if (order) {
+          setTimeout(() => {
+            setSelectedOrder(order);
+            setShowReviewModal(true);
+          }, 1500);
+        }
+      };
+
+      const handleSubmitReview = (rating, comment) => {
+        const gig = gigs.find(g => g.id === selectedOrder.gigId);
+        const newReview = {
+          id: `r${Date.now()}`,
+          clientName: users[userId].name,
+          clientAvatar: users[userId].avatar,
+          rating,
+          comment,
+          date: new Date().toISOString().split('T')[0],
+          photos: [],
+          helpful: 0,
+          providerResponse: null
+        };
+
+        // Add review to gig
+        setGigs(gigs.map(g => {
+          if (g.id === selectedOrder.gigId) {
+            const updatedReviews = [...(g.reviews || []), newReview];
+            const newAvgRating = updatedReviews.reduce((sum, r) => sum + r.rating, 0) / updatedReviews.length;
+            return {
+              ...g,
+              reviews: updatedReviews,
+              rating: parseFloat(newAvgRating.toFixed(2)),
+              reviewCount: updatedReviews.length
+            };
+          }
+          return g;
+        }));
+
+        // Mark order as reviewed
+        setOrders(orders.map(o => {
+          if (o.id === selectedOrder.id) {
+            return { ...o, hasReview: true };
+          }
+          return o;
+        }));
+
+        setShowReviewModal(false);
+        showNotification(lang === 'fr' ? '⭐ Avis publié avec succès!' : '⭐ Review published successfully!');
+      };
+
+      return (
+        <div className="min-h-screen bg-gray-50">
+          {/* Notification Toast */}
+          {notification && (
+            <div className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg notification ${
+              notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            } text-white max-w-md`}>
+              {notification.message}
+            </div>
+          )}
+
+          {/* Navigation */}
+          <nav className="bg-white border-b shadow-sm sticky top-0 z-40">
+            <div className="max-w-7xl mx-auto px-4">
+              <div className="flex justify-between items-center h-16">
+                <div className="flex items-center gap-8">
+                  <h1 className="text-2xl font-bold cursor-pointer" style={{color: '#1dbf73'}} onClick={() => setView('home')}>
+                    AfriWork
+                  </h1>
+                  {loggedIn && (
+                    <div className="hidden md:flex items-center gap-6">
+                      <button onClick={() => setView('home')} className={`font-medium ${view === 'home' ? 'text-green-600' : 'text-gray-700'}`}>
+                        Services
+                      </button>
+                      <button onClick={() => setView('orders')} className={`font-medium ${view === 'orders' ? 'text-green-600' : 'text-gray-700'}`}>
+                        Commandes
+                      </button>
+                      {userType === 'provider' && (
+                        <button onClick={() => setView('wallet')} className={`font-medium ${view === 'wallet' ? 'text-green-600' : 'text-gray-700'}`}>
+                          Portefeuille
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <select value={lang} onChange={(e) => setLang(e.target.value)} className="px-3 py-2 border rounded-lg text-sm bg-white">
+                    <option value="fr">🇫🇷 FR</option>
+                    <option value="en">🇬🇧 EN</option>
+                  </select>
+
+                  {loggedIn ? (
+                    <button onClick={() => setView('profile')} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100">
+                      {users[userId]?.avatar ? (
+                        <img src={users[userId].avatar} alt="" className="w-8 h-8 rounded-full" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
+                          {users[userId]?.name?.charAt(0)}
+                        </div>
+                      )}
+                      <span className="hidden md:block text-sm font-medium">{users[userId]?.name?.split(' ')[0]}</span>
+                    </button>
+                  ) : (
+                    <>
+                      <button onClick={() => setView('login')} className="text-gray-700 hover:text-gray-900 font-medium text-sm">
+                        Connexion
+                      </button>
+                      <button onClick={() => setView('signup')} className="px-4 py-2 rounded-lg font-medium text-sm text-white" style={{backgroundColor: '#1dbf73'}}>
+                        Inscription
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </nav>
+
+          {/* HOME VIEW */}
+          {view === 'home' && (
+            <div className="max-w-7xl mx-auto px-4 py-8">
+              <div className="text-center mb-8">
+                <h2 className="text-4xl font-bold mb-2">
+                  {lang === 'fr' ? 'Trouvez & Postez des Services' : 'Find & Post Services'}
+                </h2>
+                <p className="text-xl text-gray-600">
+                  {lang === 'fr' ? 'Paiement Sécurisé - Cameroun & Côte d\'Ivoire' : 'Secure Payment - Cameroon & Ivory Coast'}
+                </p>
+                <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg">
+                  <CheckCircle />
+                  <span className="text-sm font-medium text-green-800">
+                    {lang === 'fr' ? 'Protection Escrow Activée' : 'Escrow Protection Active'}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-gray-600">
+                  {lang === 'fr' ? `${categories.length}+ catégories • ${locations.length}+ villes • ${gigs.length} services actifs` : `${categories.length}+ categories • ${locations.length}+ cities • ${gigs.length} active services`}
+                </p>
+              </div>
+
+              <div className="mb-8">
+                <div className="relative max-w-2xl mx-auto">
+                  <div className="absolute left-4 top-3.5 text-gray-400">
+                    <Search />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={lang === 'fr' ? 'Rechercher des services...' : 'Search services...'}
+                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none text-lg"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 mb-6">
+                <select value={category} onChange={(e) => setCategory(e.target.value)} className="px-4 py-2 border rounded-lg bg-white">
+                  <option value="all">{lang === 'fr' ? 'Toutes Catégories' : 'All Categories'} ({categories.length})</option>
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id}>{c.icon} {c[lang]}</option>
+                  ))}
+                </select>
+
+                <select value={location} onChange={(e) => setLocation(e.target.value)} className="px-4 py-2 border rounded-lg bg-white">
+                  <option value="all">{lang === 'fr' ? 'Tous Lieux' : 'All Locations'} ({locations.length})</option>
+                  {locations.map(l => (
+                    <option key={l.id} value={l.id}>{l.country === 'CM' ? '🇨🇲' : '🇨🇮'} {l.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredGigs.map(g => (
+                  <div key={g.id} className="bg-white rounded-lg border hover:shadow-lg transition-shadow cursor-pointer" onClick={() => {
+                    setSelectedGig(g);
+                    setView('gigDetail');
+                  }}>
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="text-4xl">{g.icon}</div>
+                          <div>
+                            <h3 className="font-bold text-lg">{lang === 'fr' ? g.title : g.titleEn}</h3>
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-2">{g.desc}</p>
+
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center gap-2 text-sm">
+                          <MapPin />
+                          <span className="text-gray-600">{locations.find(l => l.id === g.location)?.name}</span>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm">
+                          <div className="flex items-center gap-1 text-yellow-500">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} filled={i < Math.floor(g.rating)} />
+                            ))}
+                            <span className="font-semibold text-gray-900 ml-1">{g.rating}</span>
+                            <span className="text-gray-500">({g.reviewCount})</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t">
+                        <div className="text-2xl font-bold" style={{color: '#1dbf73'}}>
+                          {g.price.toLocaleString()} FCFA
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="px-6 pb-6">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOrderClick(g);
+                        }}
+                        className="w-full py-3 rounded-lg font-medium text-white" 
+                        style={{backgroundColor: '#1dbf73'}}
+                      >
+                        {lang === 'fr' ? 'Commander' : 'Order Now'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* GIG DETAIL VIEW WITH REVIEWS */}
+          {view === 'gigDetail' && selectedGig && (
+            <div className="max-w-4xl mx-auto px-4 py-8">
+              <button onClick={() => setView('home')} className="mb-4 text-green-600 hover:text-green-700 font-medium">
+                ← {lang === 'fr' ? 'Retour' : 'Back'}
+              </button>
+
+              <div className="bg-white rounded-lg border p-6 mb-6">
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="text-5xl">{selectedGig.icon}</div>
+                  <div className="flex-1">
+                    <h1 className="text-3xl font-bold mb-2">{lang === 'fr' ? selectedGig.title : selectedGig.titleEn}</h1>
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="flex items-center gap-1 text-yellow-500">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} filled={i < Math.floor(selectedGig.rating)} />
+                        ))}
+                        <span className="font-semibold text-gray-900 ml-1">{selectedGig.rating}</span>
+                        <span className="text-gray-500">({selectedGig.reviewCount} avis)</span>
+                      </div>
+                      <span className="text-gray-500">•</span>
+                      <span className="text-gray-600">{locations.find(l => l.id === selectedGig.location)?.name}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold mb-2" style={{color: '#1dbf73'}}>
+                      {selectedGig.price.toLocaleString()} FCFA
+                    </div>
+                    <button 
+                      onClick={() => handleOrderClick(selectedGig)}
+                      className="px-6 py-3 rounded-lg font-medium text-white" 
+                      style={{backgroundColor: '#1dbf73'}}
+                    >
+                      {lang === 'fr' ? 'Commander' : 'Order Now'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="border-t pt-6">
+                  <h3 className="font-bold text-lg mb-3">{lang === 'fr' ? 'Description' : 'Description'}</h3>
+                  <p className="text-gray-700 mb-6">{selectedGig.desc}</p>
+
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white font-bold text-xl">
+                      {users[selectedGig.providerId]?.name?.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-semibold">{users[selectedGig.providerId]?.name}</p>
+                      <p className="text-sm text-gray-600">{lang === 'fr' ? 'Prestataire' : 'Provider'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* REVIEWS SECTION */}
+              <div className="bg-white rounded-lg border p-6">
+                <h2 className="text-2xl font-bold mb-6">
+                  {lang === 'fr' ? `Avis (${selectedGig.reviewCount})` : `Reviews (${selectedGig.reviewCount})`}
+                </h2>
+
+                {selectedGig.reviews && selectedGig.reviews.length > 0 ? (
+                  <div className="space-y-6">
+                    {selectedGig.reviews.map(review => (
+                      <div key={review.id} className="border-b pb-6 last:border-0">
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center font-bold text-white">
+                            {review.clientName.charAt(0)}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold">{review.clientName}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="flex text-yellow-500">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} filled={i < review.rating} />
+                                ))}
+                              </div>
+                              <span className="text-sm text-gray-500">{review.date}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <p className="text-gray-700 mb-3">{review.comment}</p>
+
+                        {review.providerResponse && (
+                          <div className="bg-gray-50 rounded p-3 border-l-4 border-green-500">
+                            <p className="font-semibold text-sm mb-1">{lang === 'fr' ? 'Réponse du prestataire' : 'Provider response'}</p>
+                            <p className="text-sm text-gray-700">{review.providerResponse}</p>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-4 mt-3">
+                          <button className="flex items-center gap-1 text-sm text-gray-600 hover:text-green-600">
+                            <ThumbsUp />
+                            <span>{lang === 'fr' ? 'Utile' : 'Helpful'} ({review.helpful})</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-8">
+                    {lang === 'fr' ? 'Aucun avis pour le moment' : 'No reviews yet'}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ORDERS VIEW */}
+          {view === 'orders' && loggedIn && (
+            <div className="max-w-7xl mx-auto px-4 py-8">
+              <h2 className="text-3xl font-bold mb-6">
+                {lang === 'fr' ? 'Mes Commandes' : 'My Orders'}
+              </h2>
+
+              {orders.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-lg">
+                  <p className="text-xl text-gray-500">
+                    {lang === 'fr' ? 'Aucune commande' : 'No orders'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {orders.map(order => {
+                    const gig = gigs.find(g => g.id === order.gigId);
+                    const isClient = userId === order.clientId;
+
+                    return (
+                      <div key={order.id} className="bg-white rounded-lg border p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-xl font-bold mb-1">
+                              {lang === 'fr' ? gig?.title : gig?.titleEn}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              {lang === 'fr' ? 'Statut' : 'Status'}: <span className={`font-semibold ${
+                                order.status === 'approved' ? 'text-green-600' : 'text-blue-600'
+                              }`}>{order.status === 'approved' ? '✅ Approuvé' : '🔄 En cours'}</span>
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold" style={{color: '#1dbf73'}}>
+                              {order.amount.toLocaleString()} FCFA
+                            </div>
+                            <p className="text-xs text-gray-500">{order.id}</p>
+                          </div>
+                        </div>
+
+                        {order.status === 'inProgress' && isClient && (
+                          <div className="mt-4">
+                            <button 
+                              onClick={() => handleApproveWork(order.id)}
+                              className="px-6 py-3 rounded-lg font-medium text-white"
+                              style={{backgroundColor: '#1dbf73'}}
+                            >
+                              {lang === 'fr' ? 'Approuver le Travail' : 'Approve Work'}
+                            </button>
+                          </div>
+                        )}
+
+                        {order.status === 'approved' && !order.hasReview && isClient && (
+                          <div className="mt-4">
+                            <button 
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setShowReviewModal(true);
+                              }}
+                              className="px-6 py-3 rounded-lg font-medium border-2"
+                              style={{borderColor: '#1dbf73', color: '#1dbf73'}}
+                            >
+                              ⭐ {lang === 'fr' ? 'Laisser un Avis' : 'Leave Review'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* PROFILE VIEW */}
+          {view === 'profile' && loggedIn && (
+            <div className="max-w-4xl mx-auto px-4 py-8">
+              <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div className="relative h-48 bg-gradient-to-r from-green-400 to-blue-500">
+                  <div className="absolute -bottom-16 left-8">
+                    <div className="relative">
+                      {users[userId]?.avatar ? (
+                        <img src={users[userId].avatar} alt="" className="w-32 h-32 rounded-full border-4 border-white" />
+                      ) : (
+                        <div className="w-32 h-32 rounded-full border-4 border-white bg-green-500 flex items-center justify-center text-white text-4xl font-bold">
+                          {users[userId]?.name?.charAt(0)}
+                        </div>
+                      )}
+                      <button 
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*';
+                          input.onchange = (e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
+                                setUsers({
+                                  ...users,
+                                  [userId]: { ...users[userId], avatar: event.target.result }
+                                });
+                                showNotification(lang === 'fr' ? '📸 Photo de profil mise à jour!' : '📸 Profile photo updated!');
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          };
+                          input.click();
+                        }}
+                        className="absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-lg hover:bg-gray-100"
+                      >
+                        <Camera />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-20 px-8 pb-8">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h2 className="text-3xl font-bold mb-2">{users[userId]?.name}</h2>
+                      <p className="text-gray-600 mb-2">{users[userId]?.type === 'provider' ? '🔧 Prestataire' : '👤 Client'}</p>
+                      <p className="text-sm text-gray-500">
+                        📧 {users[userId]?.email}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        📱 {users[userId]?.phone}
+                      </p>
+                      {users[userId]?.bio && (
+                        <p className="text-gray-700 mt-3">{users[userId].bio}</p>
+                      )}
+                    </div>
+                    <button 
+                      onClick={() => setShowProfileEdit(true)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white"
+                      style={{backgroundColor: '#1dbf73'}}
+                    >
+                      <Edit />
+                      {lang === 'fr' ? 'Modifier' : 'Edit'}
+                    </button>
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-6 mb-8">
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-gray-600 text-sm">{lang === 'fr' ? 'Membre depuis' : 'Member since'}</p>
+                      <p className="text-2xl font-bold">{users[userId]?.memberSince}</p>
+                    </div>
+                    {userType === 'provider' && (
+                      <>
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <p className="text-gray-600 text-sm">{lang === 'fr' ? 'Gains Totaux' : 'Total Earnings'}</p>
+                          <p className="text-2xl font-bold" style={{color: '#1dbf73'}}>
+                            {users[userId]?.totalEarnings?.toLocaleString()} FCFA
+                          </p>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <p className="text-gray-600 text-sm">{lang === 'fr' ? 'Taux de Réalisation' : 'Completion Rate'}</p>
+                          <p className="text-2xl font-bold">{users[userId]?.completionRate}%</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <button 
+                      onClick={() => showNotification('⚙️ ' + (lang === 'fr' ? 'Page paramètres - Bientôt disponible!' : 'Settings page - Coming soon!'))}
+                      className="flex items-center gap-3 p-4 border rounded-lg hover:bg-gray-50"
+                    >
+                      <Settings />
+                      <span>{lang === 'fr' ? 'Paramètres' : 'Settings'}</span>
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setLoggedIn(false);
+                        setUserId(null);
+                        setUserType(null);
+                        setView('home');
+                        showNotification('👋 ' + (lang === 'fr' ? 'Déconnecté' : 'Logged out'));
+                      }}
+                      className="flex items-center gap-3 p-4 border border-red-200 rounded-lg hover:bg-red-50 text-red-600"
+                    >
+                      <span>🚪</span>
+                      <span>{lang === 'fr' ? 'Déconnexion' : 'Logout'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* WALLET VIEW */}
+          {view === 'wallet' && loggedIn && userType === 'provider' && (
+            <div className="max-w-4xl mx-auto px-4 py-8">
+              <h2 className="text-3xl font-bold mb-6">{lang === 'fr' ? 'Portefeuille' : 'Wallet'}</h2>
+
+              <div className="grid md:grid-cols-2 gap-6 mb-8">
+                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white">
+                  <p className="text-sm opacity-90 mb-2">{lang === 'fr' ? 'Disponible' : 'Available'}</p>
+                  <p className="text-4xl font-bold mb-4">{users[userId]?.balance.toLocaleString()} FCFA</p>
+                  <button className="px-6 py-3 bg-white text-green-600 rounded-lg font-medium hover:bg-gray-50">
+                    {lang === 'fr' ? 'Retirer' : 'Withdraw'}
+                  </button>
+                </div>
+
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+                  <p className="text-sm opacity-90 mb-2">{lang === 'fr' ? 'Gains en Attente' : 'Pending Earnings'}</p>
+                  <p className="text-4xl font-bold mb-4">{users[userId]?.pendingEarnings.toLocaleString()} FCFA</p>
+                  <p className="text-sm opacity-75">
+                    {lang === 'fr' ? 'En attente d\'approbation client' : 'Awaiting client approval'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* LOGIN VIEW */}
+          {view === 'login' && (
+            <div className="min-h-screen flex items-center justify-center py-12">
+              <div className="max-w-md w-full mx-4 bg-white rounded-lg p-8 shadow-lg">
+                <h2 className="text-3xl font-bold mb-6 text-center">
+                  {lang === 'fr' ? 'Connexion' : 'Login'}
+                </h2>
+                <div className="space-y-4">
+                  <button 
+                    onClick={() => { 
+                      setLoggedIn(true); 
+                      setUserType('client'); 
+                      setUserId('client1');
+                      setView('home');
+                      showNotification('📧 ' + (lang === 'fr' ? 'Email de bienvenue envoyé!' : 'Welcome email sent!'));
+                    }} 
+                    className="w-full py-3 text-white rounded-lg font-bold" 
+                    style={{backgroundColor: '#1dbf73'}}
+                  >
+                    {lang === 'fr' ? 'Se Connecter comme Client' : 'Login as Client'}
+                  </button>
+                  <button 
+                    onClick={() => { 
+                      setLoggedIn(true); 
+                      setUserType('provider'); 
+                      setUserId('provider1');
+                      setView('home');
+                      showNotification('📧 ' + (lang === 'fr' ? 'Email de bienvenue envoyé!' : 'Welcome email sent!'));
+                    }} 
+                    className="w-full py-3 border-2 rounded-lg font-bold"
+                    style={{borderColor: '#1dbf73', color: '#1dbf73'}}
+                  >
+                    {lang === 'fr' ? 'Se Connecter comme Prestataire' : 'Login as Provider'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ORDER MODAL */}
+          {showOrderModal && selectedGig && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg max-w-lg w-full p-6">
+                <h2 className="text-2xl font-bold mb-4">
+                  {lang === 'fr' ? 'Détails de la Commande' : 'Order Details'}
+                </h2>
+                
+                <div className="space-y-4 mb-6">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">{lang === 'fr' ? selectedGig.title : selectedGig.titleEn}</span>
+                    <span className="font-semibold">{selectedGig.price.toLocaleString()} FCFA</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">{lang === 'fr' ? 'Frais de service (15%)' : 'Service fee (15%)'}</span>
+                    <span>{Math.round(selectedGig.price * 0.15).toLocaleString()} FCFA</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">{lang === 'fr' ? 'Frais de traitement (2%)' : 'Processing fee (2%)'}</span>
+                    <span>{Math.round(selectedGig.price * 0.02).toLocaleString()} FCFA</span>
+                  </div>
+                  <div className="flex justify-between pt-4 border-t">
+                    <span className="font-bold">{lang === 'fr' ? 'Total' : 'Total'}</span>
+                    <span className="font-bold text-2xl" style={{color: '#1dbf73'}}>
+                      {selectedGig.price.toLocaleString()} FCFA
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle />
+                    <div className="text-sm text-green-800">
+                      <p className="font-semibold mb-1">
+                        {lang === 'fr' ? 'Protection Escrow' : 'Escrow Protection'}
+                      </p>
+                      <p>
+                        {lang === 'fr' 
+                          ? 'Votre argent est sécurisé et sera libéré uniquement après votre approbation du travail.'
+                          : 'Your money is secured and will only be released after you approve the work.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button 
+                    onClick={handleConfirmOrder}
+                    className="flex-1 py-3 rounded-lg font-medium text-white"
+                    style={{backgroundColor: '#1dbf73'}}
+                  >
+                    {lang === 'fr' ? 'Confirmer la Commande' : 'Confirm Order'}
+                  </button>
+                  <button 
+                    onClick={() => setShowOrderModal(false)}
+                    className="flex-1 py-3 border-2 rounded-lg font-medium"
+                  >
+                    {lang === 'fr' ? 'Annuler' : 'Cancel'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* PAYMENT MODAL */}
+          {showPaymentModal && selectedGig && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg max-w-lg w-full p-6">
+                <h2 className="text-2xl font-bold mb-4">
+                  {lang === 'fr' ? 'Méthode de Paiement' : 'Payment Method'}
+                </h2>
+                
+                <div className="space-y-3 mb-6">
+                  <button 
+                    onClick={() => handlePayment('mtnMoney')}
+                    className="w-full p-4 border-2 rounded-lg hover:border-yellow-500 hover:bg-yellow-50 flex items-center gap-4"
+                  >
+                    <div className="w-12 h-12 bg-yellow-400 rounded-lg flex items-center justify-center text-2xl">
+                      📱
+                    </div>
+                    <div className="text-left flex-1">
+                      <p className="font-semibold">MTN Mobile Money</p>
+                      <p className="text-sm text-gray-600">Cameroun & Côte d'Ivoire</p>
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => handlePayment('orangeMoney')}
+                    className="w-full p-4 border-2 rounded-lg hover:border-orange-500 hover:bg-orange-50 flex items-center gap-4"
+                  >
+                    <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center text-2xl">
+                      📱
+                    </div>
+                    <div className="text-left flex-1">
+                      <p className="font-semibold">Orange Money</p>
+                      <p className="text-sm text-gray-600">Cameroun & Côte d'Ivoire</p>
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => handlePayment('wave')}
+                    className="w-full p-4 border-2 rounded-lg hover:border-blue-500 hover:bg-blue-50 flex items-center gap-4"
+                  >
+                    <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-2xl">
+                      📱
+                    </div>
+                    <div className="text-left flex-1">
+                      <p className="font-semibold">Wave</p>
+                      <p className="text-sm text-gray-600">Côte d'Ivoire</p>
+                    </div>
+                  </button>
+                </div>
+
+                <button 
+                  onClick={() => setShowPaymentModal(false)}
+                  className="w-full py-3 border-2 rounded-lg font-medium"
+                >
+                  {lang === 'fr' ? 'Annuler' : 'Cancel'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* REVIEW MODAL */}
+          {showReviewModal && selectedOrder && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg max-w-lg w-full p-6">
+                <h2 className="text-2xl font-bold mb-4">
+                  ⭐ {lang === 'fr' ? 'Laisser un Avis' : 'Leave a Review'}
+                </h2>
+                
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const rating = parseInt(e.target.rating.value);
+                  const comment = e.target.comment.value;
+                  handleSubmitReview(rating, comment);
+                }}>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2">
+                      {lang === 'fr' ? 'Note' : 'Rating'}
+                    </label>
+                    <div className="flex gap-2">
+                      {[1,2,3,4,5].map(star => (
+                        <label key={star} className="cursor-pointer">
+                          <input 
+                            type="radio" 
+                            name="rating" 
+                            value={star} 
+                            defaultChecked={star === 5}
+                            className="hidden"
+                          />
+                          <div className="text-3xl text-yellow-500 hover:scale-110 transition">⭐</div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium mb-2">
+                      {lang === 'fr' ? 'Votre Commentaire' : 'Your Comment'}
+                    </label>
+                    <textarea 
+                      name="comment"
+                      placeholder={lang === 'fr' ? 'Partagez votre expérience...' : 'Share your experience...'}
+                      className="w-full p-3 border rounded-lg focus:border-green-500 focus:outline-none"
+                      rows={4}
+                      required
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button 
+                      type="submit"
+                      className="flex-1 py-3 rounded-lg font-medium text-white"
+                      style={{backgroundColor: '#1dbf73'}}
+                    >
+                      {lang === 'fr' ? 'Publier l\'Avis' : 'Submit Review'}
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setShowReviewModal(false)}
+                      className="flex-1 py-3 border-2 rounded-lg font-medium"
+                    >
+                      {lang === 'fr' ? 'Plus Tard' : 'Later'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          <footer className="bg-gray-900 text-white py-8 mt-16">
+            <div className="max-w-7xl mx-auto px-4 text-center">
+              <p className="text-sm mb-2">© 2026 AfriWork • Paiement Sécurisé • Cameroun & Côte d'Ivoire</p>
+              <p className="text-xs text-gray-400">
+                🎉 DEMO with {categories.length}+ categories • Reviews & Ratings • Profile System • Email Confirmations
+              </p>
+            </div>
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<AfriWorkComplete />, document.getElementById('root'));
+  </script>
+</body>
+</html>
