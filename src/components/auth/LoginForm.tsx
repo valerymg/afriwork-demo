@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn, Eye, EyeOff } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import { useTranslation } from '../../lib/i18n';
 import toast from 'react-hot-toast';
 
 export default function LoginForm() {
@@ -10,27 +11,28 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const login = useStore((s) => s.login);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      toast.error('Please fill in all fields');
+      toast.error(t('auth.fillAll'));
       return;
     }
     const success = login(email, password);
     if (success) {
-      toast.success('Welcome back!');
+      toast.success(t('auth.welcome'));
       navigate('/');
     } else {
-      toast.error('Invalid credentials');
+      toast.error(t('auth.invalidCreds'));
     }
   };
 
   const handleDemoLogin = (type: 'client' | 'provider') => {
-    const email = type === 'client' ? 'john.doe@email.com' : 'mike.johnson@email.com';
-    const success = login(email, 'demo');
+    const demoEmail = type === 'client' ? 'ibrahim.djouma@email.com' : 'jean.paul@email.com';
+    const success = login(demoEmail, 'demo');
     if (success) {
-      toast.success(`Logged in as demo ${type}`);
+      toast.success(t('auth.welcome'));
       navigate('/');
     }
   };
@@ -41,18 +43,18 @@ export default function LoginForm() {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 text-2xl font-bold text-primary-700">
             <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
-              <span className="text-white text-lg font-bold">P</span>
+              <span className="text-white text-lg font-bold">A</span>
             </div>
-            ProServ
+            AfriWork
           </Link>
-          <p className="mt-2 text-gray-500">Sign in to your account</p>
+          <p className="mt-2 text-gray-500">{t('auth.signIn')}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email address
+                {t('auth.email')}
               </label>
               <input
                 id="email"
@@ -66,7 +68,7 @@ export default function LoginForm() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
+                {t('auth.password')}
               </label>
               <div className="relative">
                 <input
@@ -92,7 +94,7 @@ export default function LoginForm() {
               className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
             >
               <LogIn size={20} />
-              Sign In
+              {t('auth.signIn')}
             </button>
           </form>
 
@@ -102,7 +104,7 @@ export default function LoginForm() {
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or try a demo account</span>
+                <span className="px-2 bg-white text-gray-500">{t('auth.orTryDemo')}</span>
               </div>
             </div>
 
@@ -111,21 +113,21 @@ export default function LoginForm() {
                 onClick={() => handleDemoLogin('client')}
                 className="py-2.5 px-4 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                Demo Client
+                {t('auth.demoClient')}
               </button>
               <button
                 onClick={() => handleDemoLogin('provider')}
                 className="py-2.5 px-4 border border-primary-200 rounded-xl text-sm font-medium text-primary-700 hover:bg-primary-50 transition-colors"
               >
-                Demo Provider
+                {t('auth.demoProvider')}
               </button>
             </div>
           </div>
 
           <p className="mt-6 text-center text-sm text-gray-500">
-            Don't have an account?{' '}
+            {t('auth.noAccount')}{' '}
             <Link to="/signup" className="text-primary-600 font-medium hover:text-primary-700">
-              Sign up
+              {t('auth.createAccount')}
             </Link>
           </p>
         </div>

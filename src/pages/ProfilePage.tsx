@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Camera, MapPin, Phone, Mail, Calendar, Star, Edit3, Save, X } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { useTranslation } from '../lib/i18n';
 import Avatar from '../components/ui/Avatar';
 import { VerifiedBadge } from '../components/ui/Badge';
 import { LOCATIONS } from '../lib/constants';
@@ -9,6 +10,7 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
 export default function ProfilePage() {
+  const { t, lang, formatPrice } = useTranslation();
   const { user, updateProfile } = useStore();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(user?.full_name || '');
@@ -19,8 +21,8 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-        <p className="text-gray-500">Please sign in to view your profile.</p>
-        <Link to="/login" className="text-primary-600 font-medium mt-2 inline-block">Sign In</Link>
+        <p className="text-gray-500">{lang === 'fr' ? 'Veuillez vous connecter pour voir votre profil.' : 'Please sign in to view your profile.'}</p>
+        <Link to="/login" className="text-primary-600 font-medium mt-2 inline-block">{t('nav.signIn')}</Link>
       </div>
     );
   }
@@ -35,7 +37,7 @@ export default function ProfilePage() {
       location: location || null,
     });
     setEditing(false);
-    toast.success('Profile updated!');
+    toast.success(t('profile.profileUpdated'));
   };
 
   return (
@@ -64,7 +66,7 @@ export default function ProfilePage() {
                   onClick={() => editing ? handleSave() : setEditing(true)}
                   className="flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700 py-2 px-3 rounded-lg hover:bg-primary-50"
                 >
-                  {editing ? <><Save size={14} /> Save</> : <><Edit3 size={14} /> Edit</>}
+                  {editing ? <><Save size={14} /> {t('profile.saveChanges')}</> : <><Edit3 size={14} /> {t('profile.editProfile')}</>}
                 </button>
               </div>
             </div>
@@ -77,14 +79,14 @@ export default function ProfilePage() {
         {editing ? (
           <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-gray-900">Edit Profile</h2>
+              <h2 className="font-semibold text-gray-900">{t('profile.editProfile')}</h2>
               <button onClick={() => setEditing(false)} className="text-gray-400 hover:text-gray-600">
                 <X size={18} />
               </button>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{lang === 'fr' ? 'Nom complet' : 'Full Name'}</label>
               <input
                 type="text"
                 value={name}
@@ -94,19 +96,19 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.bio')}</label>
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 rows={4}
-                placeholder="Tell clients about yourself..."
+                placeholder={lang === 'fr' ? 'Parlez de vous aux clients...' : 'Tell clients about yourself...'}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.phone')}</label>
                 <input
                   type="tel"
                   value={phone}
@@ -115,13 +117,13 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.locationLabel')}</label>
                 <select
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
-                  <option value="">Select location</option>
+                  <option value="">{lang === 'fr' ? 'Choisir une ville' : 'Select location'}</option>
                   {LOCATIONS.map((loc) => (
                     <option key={loc.id} value={loc.id}>{loc.name}</option>
                   ))}
@@ -133,7 +135,7 @@ export default function ProfilePage() {
               onClick={handleSave}
               className="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
             >
-              Save Changes
+              {t('profile.saveChanges')}
             </button>
           </div>
         ) : (
@@ -141,14 +143,14 @@ export default function ProfilePage() {
             {/* Bio */}
             {user.bio && (
               <div className="bg-white rounded-xl border border-gray-100 p-6">
-                <h2 className="font-semibold text-gray-900 mb-2">About</h2>
+                <h2 className="font-semibold text-gray-900 mb-2">{t('profile.about')}</h2>
                 <p className="text-sm text-gray-600 leading-relaxed">{user.bio}</p>
               </div>
             )}
 
             {/* Details */}
             <div className="bg-white rounded-xl border border-gray-100 p-6">
-              <h2 className="font-semibold text-gray-900 mb-4">Details</h2>
+              <h2 className="font-semibold text-gray-900 mb-4">{t('profile.details')}</h2>
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
                   <Mail size={16} className="text-gray-400" />
@@ -168,7 +170,7 @@ export default function ProfilePage() {
                 )}
                 <div className="flex items-center gap-3 text-sm">
                   <Calendar size={16} className="text-gray-400" />
-                  <span className="text-gray-600">Member since {format(new Date(user.created_at), 'MMMM yyyy')}</span>
+                  <span className="text-gray-600">{t('profile.memberSince')} {format(new Date(user.created_at), 'MMMM yyyy')}</span>
                 </div>
               </div>
             </div>
@@ -176,26 +178,26 @@ export default function ProfilePage() {
             {/* Provider Stats */}
             {user.role === 'provider' && (
               <div className="bg-white rounded-xl border border-gray-100 p-6">
-                <h2 className="font-semibold text-gray-900 mb-4">Performance</h2>
+                <h2 className="font-semibold text-gray-900 mb-4">{t('profile.performance')}</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div className="bg-primary-50 rounded-xl p-4 text-center">
                     <div className="flex items-center justify-center gap-1 text-2xl font-bold text-primary-700">
                       <Star size={20} className="fill-yellow-400 text-yellow-400" />
                       {user.rating_avg}
                     </div>
-                    <div className="text-xs text-primary-600 mt-1">Rating</div>
+                    <div className="text-xs text-primary-600 mt-1">{t('profile.rating')}</div>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-gray-900">{user.review_count}</div>
-                    <div className="text-xs text-gray-500 mt-1">Reviews</div>
+                    <div className="text-xs text-gray-500 mt-1">{t('profile.reviewsCount')}</div>
                   </div>
                   <div className="bg-accent-50 rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-accent-700">{user.completion_rate}%</div>
-                    <div className="text-xs text-accent-600 mt-1">Completion</div>
+                    <div className="text-xs text-accent-600 mt-1">{t('profile.completion')}</div>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-4 text-center">
-                    <div className="text-lg font-bold text-gray-900">${user.total_earnings.toLocaleString()}</div>
-                    <div className="text-xs text-gray-500 mt-1">Total Earned</div>
+                    <div className="text-lg font-bold text-gray-900">{formatPrice(user.total_earnings)}</div>
+                    <div className="text-xs text-gray-500 mt-1">{t('profile.totalEarned')}</div>
                   </div>
                 </div>
               </div>

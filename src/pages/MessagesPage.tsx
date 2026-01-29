@@ -2,10 +2,12 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Send, ArrowLeft, Phone, MoreVertical } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { useTranslation } from '../lib/i18n';
 import Avatar from '../components/ui/Avatar';
 import { format, isToday, isYesterday } from 'date-fns';
 
 export default function MessagesPage() {
+  const { t, lang } = useTranslation();
   const { conversationId } = useParams();
   const navigate = useNavigate();
   const { user, getConversationsByUser, getMessages, sendMessage, conversations: allConvs } = useStore();
@@ -25,8 +27,8 @@ export default function MessagesPage() {
   if (!user) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-        <p className="text-gray-500">Please sign in to view messages.</p>
-        <Link to="/login" className="text-primary-600 font-medium mt-2 inline-block">Sign In</Link>
+        <p className="text-gray-500">{lang === 'fr' ? 'Veuillez vous connecter pour voir vos messages.' : 'Please sign in to view messages.'}</p>
+        <Link to="/login" className="text-primary-600 font-medium mt-2 inline-block">{t('nav.signIn')}</Link>
       </div>
     );
   }
@@ -41,7 +43,7 @@ export default function MessagesPage() {
   const formatMsgTime = (date: string) => {
     const d = new Date(date);
     if (isToday(d)) return format(d, 'h:mm a');
-    if (isYesterday(d)) return 'Yesterday ' + format(d, 'h:mm a');
+    if (isYesterday(d)) return (lang === 'fr' ? 'Hier ' : 'Yesterday ') + format(d, 'h:mm a');
     return format(d, 'MMM d, h:mm a');
   };
 
@@ -57,12 +59,12 @@ export default function MessagesPage() {
         activeConv && conversationId ? 'hidden md:flex' : 'flex'
       }`}>
         <div className="p-4 border-b border-gray-100">
-          <h1 className="text-lg font-semibold text-gray-900">Messages</h1>
+          <h1 className="text-lg font-semibold text-gray-900">{t('messages.title')}</h1>
         </div>
         <div className="flex-1 overflow-y-auto">
           {conversations.length === 0 ? (
             <div className="p-8 text-center text-gray-500 text-sm">
-              No conversations yet. Contact a provider to start chatting!
+              {t('messages.noConversations')}. {t('messages.startChatting')}
             </div>
           ) : (
             conversations.map((conv) => {
@@ -102,7 +104,7 @@ export default function MessagesPage() {
                       )}
                     </div>
                     <p className="text-xs text-gray-500 truncate mt-0.5">
-                      {conv.last_message || 'Start a conversation...'}
+                      {conv.last_message || (lang === 'fr' ? 'Commencer une conversation...' : 'Start a conversation...')}
                     </p>
                   </div>
                 </Link>
@@ -134,7 +136,7 @@ export default function MessagesPage() {
               <div className="flex-1 min-w-0">
                 <h3 className="font-medium text-gray-900">{getOtherUser(activeConv)?.full_name}</h3>
                 {activeConv.gig && (
-                  <p className="text-xs text-gray-500 truncate">Re: {activeConv.gig.title}</p>
+                  <p className="text-xs text-gray-500 truncate">Re: {lang === 'fr' ? (activeConv.gig as any).title_fr || activeConv.gig.title : activeConv.gig.title}</p>
                 )}
               </div>
               <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-400">
@@ -183,7 +185,7 @@ export default function MessagesPage() {
                   type="text"
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
-                  placeholder="Type a message..."
+                  placeholder={t('messages.typeMessage')}
                   className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
                 <button
@@ -199,8 +201,8 @@ export default function MessagesPage() {
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-400">
             <div className="text-center">
-              <p className="text-lg font-medium mb-1">Select a conversation</p>
-              <p className="text-sm">Choose from your existing conversations or start a new one.</p>
+              <p className="text-lg font-medium mb-1">{t('messages.selectConversation')}</p>
+              <p className="text-sm">{lang === 'fr' ? 'Choisissez parmi vos conversations existantes ou commencez-en une nouvelle.' : 'Choose from your existing conversations or start a new one.'}</p>
             </div>
           </div>
         )}

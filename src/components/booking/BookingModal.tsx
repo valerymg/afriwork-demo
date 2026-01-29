@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react';
-import { X, Calendar, Clock, CreditCard, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Calendar, Clock, Shield, ChevronLeft, ChevronRight, Phone } from 'lucide-react';
 import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isBefore, startOfDay, getDay } from 'date-fns';
 import type { Gig, PricingTier } from '../../types';
 import { useStore } from '../../store/useStore';
-import { PLATFORM_FEE_RATE } from '../../lib/constants';
+import { PLATFORM_FEE_RATE, PAYMENT_METHODS } from '../../lib/constants';
 import { TIME_SLOTS } from '../../lib/constants';
+import { useTranslation } from '../../lib/i18n';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -20,9 +21,12 @@ export default function BookingModal({ gig, tier, onClose }: BookingModalProps) 
   const [selectedTime, setSelectedTime] = useState('');
   const [notes, setNotes] = useState('');
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedPayment, setSelectedPayment] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const navigate = useNavigate();
 
   const { user, createBooking, createOrder } = useStore();
+  const { t, lang, formatPrice } = useTranslation();
 
   const today = startOfDay(new Date());
   const minDate = addDays(today, 1);
@@ -37,8 +41,20 @@ export default function BookingModal({ gig, tier, onClose }: BookingModalProps) 
 
   const blanks = useMemo(() => Array.from({ length: startDayOfWeek }, (_, i) => i), [startDayOfWeek]);
 
+  const isMobileMoney = selectedPayment === 'mtn_money' || selectedPayment === 'orange_money' || selectedPayment === 'wave';
+
   const handleConfirm = () => {
     if (!selectedDate || !selectedTime || !user) return;
+
+    if (!selectedPayment) {
+      toast.error(t('booking.selectPayment'));
+      return;
+    }
+
+    if (isMobileMoney && !phoneNumber) {
+      toast.error(lang === 'fr' ? 'Veuillez entrer votre numero de telephone' : 'Please enter your phone number');
+      return;
+    }
 
     const booking = createBooking({
       gig_id: gig.id,
@@ -60,13 +76,14 @@ export default function BookingModal({ gig, tier, onClose }: BookingModalProps) 
       amount: total,
       platform_fee: platformFee,
       provider_earnings: tier.price - platformFee,
+      payment_method: selectedPayment as any,
       payment_intent_id: `pi_mock_${Date.now()}`,
       payment_status: 'held',
       status: 'paid',
       booking,
     });
 
-    toast.success('Booking confirmed! Payment held in escrow.');
+    toast.success(t('booking.bookingConfirmed'));
     onClose();
     navigate('/orders');
   };
@@ -77,8 +94,8 @@ export default function BookingModal({ gig, tier, onClose }: BookingModalProps) 
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Book Service</h2>
-            <p className="text-sm text-gray-500">{tier.name} - ${tier.price}</p>
+            <h2 className="text-lg font-semibold text-gray-900">{t('booking.bookService')}</h2>
+            <p className="text-sm text-gray-500">{tier.name} - {formatPrice(tier.price)}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
             <X size={20} />
@@ -93,7 +110,7 @@ export default function BookingModal({ gig, tier, onClose }: BookingModalProps) 
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-medium text-gray-900 flex items-center gap-2">
                     <Calendar size={18} className="text-primary-600" />
-                    Select Date
+                    {t('booking.selectDate')}
                   </h3>
                   <div className="flex items-center gap-1">
                     <button
@@ -147,7 +164,7 @@ export default function BookingModal({ gig, tier, onClose }: BookingModalProps) 
                 <div>
                   <h3 className="font-medium text-gray-900 flex items-center gap-2 mb-3">
                     <Clock size={18} className="text-primary-600" />
-                    Select Time
+                    {t('booking.selectTime')}
                   </h3>
                   <div className="grid grid-cols-4 gap-2">
                     {TIME_SLOTS.map((time) => (
@@ -170,12 +187,12 @@ export default function BookingModal({ gig, tier, onClose }: BookingModalProps) 
               {/* Notes */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Notes for the provider (optional)
+                  {t('booking.notesLabel')}
                 </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Describe what you need help with..."
+                  placeholder={t('booking.notesPlaceholder')}
                   rows={3}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
                 />
@@ -186,51 +203,54 @@ export default function BookingModal({ gig, tier, onClose }: BookingModalProps) 
                 onClick={() => setStep('confirm')}
                 className="w-full bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors"
               >
-                Continue to Payment
+                {t('booking.continueToPay')}
               </button>
             </div>
           ) : (
             <div className="space-y-5">
               {/* Booking Summary */}
               <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-                <h3 className="font-medium text-gray-900">Booking Summary</h3>
+                <h3 className="font-medium text-gray-900">{t('booking.bookingSummary')}</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Service</span>
-                    <span className="text-gray-900 font-medium text-right max-w-[200px] truncate">{gig.title}</span>
+                    <span className="text-gray-500">{t('booking.service')}</span>
+                    <span className="text-gray-900 font-medium text-right max-w-[200px] truncate">
+                      {lang === 'fr' ? gig.title_fr : gig.title}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Package</span>
+                    <span className="text-gray-500">{t('booking.package')}</span>
                     <span className="text-gray-900">{tier.name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Date</span>
+                    <span className="text-gray-500">{t('booking.date')}</span>
                     <span className="text-gray-900">{selectedDate && format(selectedDate, 'MMM d, yyyy')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Time</span>
+                    <span className="text-gray-500">{t('booking.time')}</span>
                     <span className="text-gray-900">{selectedTime}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Delivery</span>
-                    <span className="text-gray-900">{tier.delivery_days} day{tier.delivery_days > 1 ? 's' : ''}</span>
+                    <span className="text-gray-500">{t('booking.deliveryTime')}</span>
+                    <span className="text-gray-900">{tier.delivery_days} {lang === 'fr' ? 'jour' : 'day'}{tier.delivery_days > 1 ? 's' : ''}</span>
                   </div>
                 </div>
               </div>
 
               {/* Price Breakdown */}
               <div className="space-y-2 text-sm">
+                <h3 className="font-medium text-gray-900">{t('booking.priceBreakdown')}</h3>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Service Price</span>
-                  <span className="text-gray-900">${tier.price.toFixed(2)}</span>
+                  <span className="text-gray-500">{t('booking.servicePrice')}</span>
+                  <span className="text-gray-900">{formatPrice(tier.price)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Service Fee</span>
-                  <span className="text-gray-900">${platformFee.toFixed(2)}</span>
+                  <span className="text-gray-500">{t('booking.serviceFeeLabel')}</span>
+                  <span className="text-gray-900">{formatPrice(platformFee)}</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-gray-200">
-                  <span className="font-semibold text-gray-900">Total</span>
-                  <span className="font-bold text-xl text-gray-900">${total.toFixed(2)}</span>
+                  <span className="font-semibold text-gray-900">{t('gig.total')}</span>
+                  <span className="font-bold text-xl text-gray-900">{formatPrice(total)}</span>
                 </div>
               </div>
 
@@ -238,31 +258,65 @@ export default function BookingModal({ gig, tier, onClose }: BookingModalProps) 
               <div className="bg-primary-50 rounded-xl p-4 flex items-start gap-3">
                 <Shield size={20} className="text-primary-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-primary-900">Secure Escrow Payment</p>
+                  <p className="text-sm font-medium text-primary-900">{t('booking.escrowNotice')}</p>
                   <p className="text-xs text-primary-700 mt-0.5">
-                    Your payment will be held securely until you confirm the job is complete. 100% money-back guarantee if unsatisfied.
+                    {t('booking.escrowDesc')}
                   </p>
                 </div>
               </div>
 
-              {/* Payment */}
-              <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-xl p-4">
-                <CreditCard size={18} className="text-gray-400" />
-                <span>Payment via Stripe (secured)</span>
+              {/* Payment Method Selection */}
+              <div>
+                <h3 className="font-medium text-gray-900 mb-3">{t('booking.paymentMethod')}</h3>
+                <div className="space-y-2">
+                  {PAYMENT_METHODS.filter((pm) => pm.id !== 'installments').map((method) => (
+                    <button
+                      key={method.id}
+                      onClick={() => setSelectedPayment(method.id)}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                        selectedPayment === method.id
+                          ? 'border-primary-500 bg-primary-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <span className="text-xl">{method.icon}</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {lang === 'fr' ? method.name_fr : method.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              {/* Phone Number for Mobile Money */}
+              {isMobileMoney && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1.5">
+                    <Phone size={14} />
+                    {t('profile.phone')}
+                  </label>
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="+237 6XX XXX XXX"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
+              )}
 
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep('date')}
                   className="flex-1 py-3 border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  Back
+                  {t('gig.back')}
                 </button>
                 <button
                   onClick={handleConfirm}
                   className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 rounded-xl transition-colors"
                 >
-                  Confirm & Pay
+                  {t('booking.confirmAndPay')}
                 </button>
               </div>
             </div>

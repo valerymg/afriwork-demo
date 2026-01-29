@@ -1,26 +1,28 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Search, MessageSquare, Briefcase, User } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import { useTranslation } from '../../lib/i18n';
 
 export default function MobileNav() {
   const location = useLocation();
   const { isAuthenticated } = useStore();
+  const { t } = useTranslation();
   const path = location.pathname;
 
   // Hide mobile nav on auth pages
   if (path === '/login' || path === '/signup') return null;
 
   const navItems = [
-    { to: '/', icon: Home, label: 'Home' },
-    { to: '/search', icon: Search, label: 'Search' },
+    { to: '/', icon: Home, label: t('nav.home') },
+    { to: '/search', icon: Search, label: t('search.searchServices') },
     ...(isAuthenticated
       ? [
-          { to: '/messages', icon: MessageSquare, label: 'Messages' },
-          { to: '/orders', icon: Briefcase, label: 'Orders' },
-          { to: '/profile', icon: User, label: 'Profile' },
+          { to: '/messages', icon: MessageSquare, label: t('nav.messages') },
+          { to: '/orders', icon: Briefcase, label: t('nav.orders') },
+          { to: '/profile', icon: User, label: t('nav.profile') },
         ]
       : [
-          { to: '/login', icon: User, label: 'Sign In' },
+          { to: '/login', icon: User, label: t('nav.signIn') },
         ]),
   ];
 

@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Search, MessageSquare, Bell, Menu, X, Plus, LogOut, User, LayoutDashboard, Briefcase } from 'lucide-react';
 import { useState } from 'react';
 import { useStore } from '../../store/useStore';
+import { useTranslation } from '../../lib/i18n';
 import Avatar from '../ui/Avatar';
 
 export default function Navbar() {
@@ -10,6 +11,7 @@ export default function Navbar() {
   const [profileDropdown, setProfileDropdown] = useState(false);
   const { user, isAuthenticated, logout } = useStore();
   const navigate = useNavigate();
+  const { t, lang, setLang } = useTranslation();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,9 +34,9 @@ export default function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
-              <span className="text-white text-base font-bold">P</span>
+              <span className="text-white text-base font-bold">A</span>
             </div>
-            <span className="text-xl font-bold text-gray-900 hidden sm:block">ProServ</span>
+            <span className="text-xl font-bold text-gray-900 hidden sm:block">AfriWork</span>
           </Link>
 
           {/* Search Bar - Desktop */}
@@ -45,7 +47,7 @@ export default function Navbar() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for services..."
+                placeholder={t('nav.searchPlaceholder')}
                 className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:bg-white"
               />
             </div>
@@ -53,6 +55,14 @@ export default function Navbar() {
 
           {/* Right Side */}
           <div className="flex items-center gap-2">
+            {/* Language Toggle */}
+            <button
+              onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
+              className="px-2 py-1 text-xs font-bold rounded-md border border-gray-200 hover:bg-gray-50"
+            >
+              {lang === 'fr' ? 'EN' : 'FR'}
+            </button>
+
             {isAuthenticated && user ? (
               <>
                 {user.role === 'provider' && (
@@ -61,7 +71,7 @@ export default function Navbar() {
                     className="hidden sm:flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium py-2 px-4 rounded-xl transition-colors"
                   >
                     <Plus size={16} />
-                    Create Gig
+                    {t('nav.createGig')}
                   </Link>
                 )}
 
@@ -109,7 +119,7 @@ export default function Navbar() {
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                         >
                           <LayoutDashboard size={16} />
-                          Dashboard
+                          {t('nav.dashboard')}
                         </Link>
                         <Link
                           to="/profile"
@@ -117,7 +127,7 @@ export default function Navbar() {
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                         >
                           <User size={16} />
-                          Profile
+                          {t('nav.profile')}
                         </Link>
                         <Link
                           to="/orders"
@@ -125,7 +135,7 @@ export default function Navbar() {
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                         >
                           <Briefcase size={16} />
-                          Orders
+                          {t('nav.orders')}
                         </Link>
 
                         <div className="border-t border-gray-100 mt-1 pt-1">
@@ -134,7 +144,7 @@ export default function Navbar() {
                             className="flex items-center gap-3 px-4 py-2.5 text-sm text-danger-600 hover:bg-danger-50 w-full"
                           >
                             <LogOut size={16} />
-                            Sign Out
+                            {t('nav.signOut')}
                           </button>
                         </div>
                       </div>
@@ -148,13 +158,13 @@ export default function Navbar() {
                   to="/login"
                   className="text-sm font-medium text-gray-700 hover:text-gray-900 py-2 px-4 rounded-xl hover:bg-gray-100 transition-colors"
                 >
-                  Sign In
+                  {t('nav.signIn')}
                 </Link>
                 <Link
                   to="/signup"
                   className="text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 py-2 px-4 rounded-xl transition-colors"
                 >
-                  Join Now
+                  {t('nav.joinNow')}
                 </Link>
               </div>
             )}
@@ -178,7 +188,7 @@ export default function Navbar() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for services..."
+                placeholder={t('nav.searchPlaceholder')}
                 className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
@@ -195,14 +205,14 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
               className="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg"
             >
-              Home
+              {t('nav.home')}
             </Link>
             <Link
               to="/categories"
               onClick={() => setMobileMenuOpen(false)}
               className="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg"
             >
-              Categories
+              {t('nav.categories')}
             </Link>
             {isAuthenticated && user?.role === 'provider' && (
               <Link
@@ -210,7 +220,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block px-3 py-2.5 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-lg"
               >
-                Create Gig
+                {t('nav.createGig')}
               </Link>
             )}
           </div>

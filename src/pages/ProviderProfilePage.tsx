@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { MapPin, Calendar, Star, Clock, MessageSquare } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { useTranslation } from '../lib/i18n';
 import Avatar from '../components/ui/Avatar';
 import { VerifiedBadge } from '../components/ui/Badge';
 import GigCard from '../components/gigs/GigCard';
@@ -8,6 +9,7 @@ import { LOCATIONS } from '../lib/constants';
 import { format } from 'date-fns';
 
 export default function ProviderProfilePage() {
+  const { t, lang } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { getProfileById, getGigsByProvider, getReviewsByGig } = useStore();
 
@@ -17,8 +19,8 @@ export default function ProviderProfilePage() {
   if (!provider) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Provider not found</h2>
-        <Link to="/" className="text-primary-600 font-medium">Go back home</Link>
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('provider.providerNotFound')}</h2>
+        <Link to="/" className="text-primary-600 font-medium">{lang === 'fr' ? 'Retour à l\'accueil' : 'Go back home'}</Link>
       </div>
     );
   }
@@ -56,12 +58,12 @@ export default function ProviderProfilePage() {
                 )}
                 <span className="flex items-center gap-1">
                   <Calendar size={14} />
-                  Joined {format(new Date(provider.created_at), 'MMMM yyyy')}
+                  {lang === 'fr' ? 'Inscrit en' : 'Joined'} {format(new Date(provider.created_at), 'MMMM yyyy')}
                 </span>
                 {provider.response_time && (
                   <span className="flex items-center gap-1">
                     <Clock size={14} />
-                    Responds {provider.response_time}
+                    {lang === 'fr' ? 'Répond' : 'Responds'} {provider.response_time}
                   </span>
                 )}
               </div>
@@ -75,19 +77,19 @@ export default function ProviderProfilePage() {
                 <Star size={20} className="fill-yellow-400 text-yellow-400" />
                 {provider.rating_avg}
               </div>
-              <div className="text-xs text-primary-600 mt-1">Rating</div>
+              <div className="text-xs text-primary-600 mt-1">{t('profile.rating')}</div>
             </div>
             <div className="bg-gray-50 rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-gray-900">{provider.review_count}</div>
-              <div className="text-xs text-gray-500 mt-1">Reviews</div>
+              <div className="text-xs text-gray-500 mt-1">{t('profile.reviewsCount')}</div>
             </div>
             <div className="bg-accent-50 rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-accent-700">{provider.completion_rate}%</div>
-              <div className="text-xs text-accent-600 mt-1">Completion Rate</div>
+              <div className="text-xs text-accent-600 mt-1">{t('provider.completionRate')}</div>
             </div>
             <div className="bg-gray-50 rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-gray-900">{providerGigs.length}</div>
-              <div className="text-xs text-gray-500 mt-1">Active Gigs</div>
+              <div className="text-xs text-gray-500 mt-1">{t('provider.activeGigs')}</div>
             </div>
           </div>
         </div>
@@ -96,7 +98,7 @@ export default function ProviderProfilePage() {
       {/* Gigs */}
       {providerGigs.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Services Offered</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('provider.servicesOffered')}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {providerGigs.map((gig) => (
               <GigCard key={gig.id} gig={gig} />
@@ -109,7 +111,7 @@ export default function ProviderProfilePage() {
       {allReviews.length > 0 && (
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Recent Reviews ({allReviews.length})
+            {t('provider.recentReviews')} ({allReviews.length})
           </h2>
           <div className="space-y-4">
             {allReviews.slice(0, 5).map((review) => (
@@ -141,7 +143,7 @@ export default function ProviderProfilePage() {
                       <div className="mt-2 bg-gray-50 rounded-lg p-3 border-l-2 border-primary-300">
                         <div className="flex items-center gap-1.5 mb-1">
                           <MessageSquare size={12} className="text-primary-600" />
-                          <span className="text-xs font-medium text-primary-600">Response</span>
+                          <span className="text-xs font-medium text-primary-600">{t('provider.response')}</span>
                         </div>
                         <p className="text-xs text-gray-600">{review.provider_response}</p>
                       </div>

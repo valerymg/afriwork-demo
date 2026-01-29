@@ -4,16 +4,18 @@ import {
   Clock, ArrowRight, Plus, MessageSquare,
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { useTranslation } from '../lib/i18n';
 import GigCard from '../components/gigs/GigCard';
 
 export default function DashboardPage() {
+  const { t, lang, formatPrice } = useTranslation();
   const { user, getOrdersByUser, getGigsByProvider, getBookingsByUser } = useStore();
 
   if (!user) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-        <p className="text-gray-500">Please sign in to view your dashboard.</p>
-        <Link to="/login" className="text-primary-600 font-medium mt-2 inline-block">Sign In</Link>
+        <p className="text-gray-500">{lang === 'fr' ? 'Veuillez vous connecter pour voir votre tableau de bord.' : 'Please sign in to view your dashboard.'}</p>
+        <Link to="/login" className="text-primary-600 font-medium mt-2 inline-block">{t('nav.signIn')}</Link>
       </div>
     );
   }
@@ -32,9 +34,9 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Welcome back, {user.full_name.split(' ')[0]}!
+            {t('dashboard.welcome')}, {user.full_name.split(' ')[0]}!
           </h1>
-          <p className="text-gray-500">Here's what's happening with your account.</p>
+          <p className="text-gray-500">{t('dashboard.accountOverview')}</p>
         </div>
         {isProvider && (
           <Link
@@ -42,7 +44,7 @@ export default function DashboardPage() {
             className="hidden sm:flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium py-2.5 px-4 rounded-xl transition-colors"
           >
             <Plus size={16} />
-            New Gig
+            {t('dashboard.newGig')}
           </Link>
         )}
       </div>
@@ -57,8 +59,8 @@ export default function DashboardPage() {
                   <DollarSign size={20} className="text-accent-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Balance</p>
-                  <p className="text-xl font-bold text-gray-900">${user.balance.toLocaleString()}</p>
+                  <p className="text-xs text-gray-500">{t('dashboard.balance')}</p>
+                  <p className="text-xl font-bold text-gray-900">{formatPrice(user.balance)}</p>
                 </div>
               </div>
             </div>
@@ -68,8 +70,8 @@ export default function DashboardPage() {
                   <Clock size={20} className="text-warning-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Pending</p>
-                  <p className="text-xl font-bold text-gray-900">${user.pending_earnings.toLocaleString()}</p>
+                  <p className="text-xs text-gray-500">{t('dashboard.pending')}</p>
+                  <p className="text-xl font-bold text-gray-900">{formatPrice(user.pending_earnings)}</p>
                 </div>
               </div>
             </div>
@@ -79,8 +81,8 @@ export default function DashboardPage() {
                   <TrendingUp size={20} className="text-primary-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Total Earned</p>
-                  <p className="text-xl font-bold text-gray-900">${user.total_earnings.toLocaleString()}</p>
+                  <p className="text-xs text-gray-500">{t('dashboard.totalEarnedLabel')}</p>
+                  <p className="text-xl font-bold text-gray-900">{formatPrice(user.total_earnings)}</p>
                 </div>
               </div>
             </div>
@@ -90,7 +92,7 @@ export default function DashboardPage() {
                   <Star size={20} className="text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Rating</p>
+                  <p className="text-xs text-gray-500">{t('dashboard.ratingLabel')}</p>
                   <p className="text-xl font-bold text-gray-900">{user.rating_avg} / 5</p>
                 </div>
               </div>
@@ -104,7 +106,7 @@ export default function DashboardPage() {
                   <Briefcase size={20} className="text-primary-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Active Orders</p>
+                  <p className="text-xs text-gray-500">{t('dashboard.activeOrders')}</p>
                   <p className="text-xl font-bold text-gray-900">{activeOrders.length}</p>
                 </div>
               </div>
@@ -115,7 +117,7 @@ export default function DashboardPage() {
                   <Briefcase size={20} className="text-accent-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Completed</p>
+                  <p className="text-xs text-gray-500">{t('dashboard.completedLabel')}</p>
                   <p className="text-xl font-bold text-gray-900">{completedOrders.length}</p>
                 </div>
               </div>
@@ -126,7 +128,7 @@ export default function DashboardPage() {
                   <Clock size={20} className="text-warning-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Upcoming</p>
+                  <p className="text-xs text-gray-500">{t('dashboard.upcoming')}</p>
                   <p className="text-xl font-bold text-gray-900">{pendingBookings.length}</p>
                 </div>
               </div>
@@ -137,8 +139,8 @@ export default function DashboardPage() {
                   <MessageSquare size={20} className="text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Messages</p>
-                  <Link to="/messages" className="text-xl font-bold text-primary-600 hover:text-primary-700">View</Link>
+                  <p className="text-xs text-gray-500">{t('dashboard.messagesLabel')}</p>
+                  <Link to="/messages" className="text-xl font-bold text-primary-600 hover:text-primary-700">{t('dashboard.viewAll')}</Link>
                 </div>
               </div>
             </div>
@@ -150,9 +152,9 @@ export default function DashboardPage() {
       <div className="grid md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white rounded-xl border border-gray-100 p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-900">Recent Activity</h2>
+            <h2 className="font-semibold text-gray-900">{t('dashboard.recentActivity')}</h2>
             <Link to="/orders" className="text-sm text-primary-600 font-medium flex items-center gap-1">
-              View All <ArrowRight size={14} />
+              {t('dashboard.viewAll')} <ArrowRight size={14} />
             </Link>
           </div>
           {orders.slice(0, 3).length > 0 ? (
@@ -160,8 +162,8 @@ export default function DashboardPage() {
               {orders.slice(0, 3).map((order) => (
                 <div key={order.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Order #{order.id.slice(-4)}</p>
-                    <p className="text-xs text-gray-500">${order.amount}</p>
+                    <p className="text-sm font-medium text-gray-900">{lang === 'fr' ? 'Commande' : 'Order'} #{order.id.slice(-4)}</p>
+                    <p className="text-xs text-gray-500">{formatPrice(order.amount)}</p>
                   </div>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                     order.status === 'completed'
@@ -170,20 +172,20 @@ export default function DashboardPage() {
                         ? 'bg-primary-100 text-primary-700'
                         : 'bg-gray-100 text-gray-600'
                   }`}>
-                    {order.status.replace('_', ' ')}
+                    {t(`orders.orderStatus.${order.status === 'in_progress' ? 'inProgress' : order.status}` as any)}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-500 py-4 text-center">No recent activity.</p>
+            <p className="text-sm text-gray-500 py-4 text-center">{t('dashboard.noRecentActivity')}</p>
           )}
         </div>
 
         <div className="bg-white rounded-xl border border-gray-100 p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-900">
-              {isProvider ? 'Upcoming Bookings' : 'Scheduled Services'}
+              {isProvider ? t('dashboard.upcomingBookings') : t('dashboard.scheduledServices')}
             </h2>
           </div>
           {pendingBookings.length > 0 ? (
@@ -191,8 +193,8 @@ export default function DashboardPage() {
               {pendingBookings.slice(0, 3).map((booking) => (
                 <div key={booking.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{booking.gig?.title?.slice(0, 30)}...</p>
-                    <p className="text-xs text-gray-500">{booking.scheduled_date} at {booking.scheduled_time}</p>
+                    <p className="text-sm font-medium text-gray-900">{lang === 'fr' ? ((booking.gig as any)?.title_fr || booking.gig?.title) : booking.gig?.title?.slice(0, 30)}...</p>
+                    <p className="text-xs text-gray-500">{booking.scheduled_date} {lang === 'fr' ? 'à' : 'at'} {booking.scheduled_time}</p>
                   </div>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                     booking.status === 'confirmed'
@@ -205,7 +207,7 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-500 py-4 text-center">No upcoming bookings.</p>
+            <p className="text-sm text-gray-500 py-4 text-center">{t('dashboard.noUpcomingBookings')}</p>
           )}
         </div>
       </div>
@@ -214,9 +216,9 @@ export default function DashboardPage() {
       {isProvider && myGigs.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-900">Your Gigs</h2>
+            <h2 className="font-semibold text-gray-900">{t('dashboard.yourGigs')}</h2>
             <Link to="/gigs/create" className="text-sm text-primary-600 font-medium flex items-center gap-1">
-              <Plus size={14} /> New Gig
+              <Plus size={14} /> {t('dashboard.newGig')}
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

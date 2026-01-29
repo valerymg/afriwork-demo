@@ -5,22 +5,39 @@ import StarRating from '../ui/StarRating';
 import Avatar from '../ui/Avatar';
 import { VerifiedBadge } from '../ui/Badge';
 import { LOCATIONS } from '../../lib/constants';
+import { useTranslation } from '../../lib/i18n';
 
 interface GigCardProps {
   gig: Gig;
 }
 
 export default function GigCard({ gig }: GigCardProps) {
+  const { t, lang, formatPrice } = useTranslation();
   const locationName = LOCATIONS.find((l) => l.id === gig.location)?.name || gig.location;
-  const lowestPrice = Math.min(...gig.pricing_tiers.map((t) => t.price));
+  const lowestPrice = Math.min(...gig.pricing_tiers.map((tier) => tier.price));
   const provider = gig.provider;
 
   return (
     <Link to={`/gigs/${gig.id}`} className="group block">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:border-gray-200 transition-all duration-200">
         {/* Photo placeholder */}
-        <div className="aspect-[16/10] bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center">
+        <div className="relative aspect-[16/10] bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center">
           <span className="text-5xl">{getCategoryEmoji(gig.category)}</span>
+
+          {/* Emergency badge */}
+          {gig.is_emergency && (
+            <span className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+              {t('emergency.emergencyBadge')}
+            </span>
+          )}
+
+          {/* Available Now badge */}
+          {provider?.is_available_now && (
+            <span className="absolute top-2 right-2 bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+              {t('emergency.availableNow')}
+            </span>
+          )}
         </div>
 
         <div className="p-4">
@@ -37,9 +54,9 @@ export default function GigCard({ gig }: GigCardProps) {
             </div>
           )}
 
-          {/* Title */}
+          {/* Title - bilingual */}
           <h3 className="text-base font-semibold text-gray-900 group-hover:text-primary-600 transition-colors line-clamp-2 mb-2">
-            {gig.title}
+            {lang === 'fr' ? gig.title_fr : gig.title}
           </h3>
 
           {/* Rating */}
@@ -57,15 +74,15 @@ export default function GigCard({ gig }: GigCardProps) {
             </span>
             <span className="flex items-center gap-1">
               <Clock size={12} />
-              {gig.pricing_tiers[0]?.delivery_days}d delivery
+              {gig.pricing_tiers[0]?.delivery_days}{lang === 'fr' ? 'j' : 'd'} {t('gig.delivery').toLowerCase()}
             </span>
           </div>
 
           {/* Price */}
           <div className="pt-3 border-t border-gray-100">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-500 uppercase tracking-wide">Starting at</span>
-              <span className="text-lg font-bold text-gray-900">${lowestPrice}</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wide">{t('gig.startingAt')}</span>
+              <span className="text-lg font-bold text-gray-900">{formatPrice(lowestPrice)}</span>
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Profile, Gig, Review, Booking, Order, Conversation, Message } from '../types';
+import type { Profile, Gig, Review, Booking, Order, Conversation, Message, PaymentMethod } from '../types';
 import {
   MOCK_PROVIDERS,
   MOCK_CLIENTS,
@@ -10,6 +10,14 @@ import {
   MOCK_CONVERSATIONS,
   MOCK_MESSAGES,
 } from '../lib/mock-data';
+
+interface SearchGigOptions {
+  minPrice?: number;
+  maxPrice?: number;
+  emergencyOnly?: boolean;
+  availableNow?: boolean;
+  sortBy?: string;
+}
 
 interface AppState {
   // Auth
@@ -24,7 +32,7 @@ interface AppState {
   getGigById: (id: string) => Gig | undefined;
   getGigsByCategory: (category: string) => Gig[];
   getGigsByProvider: (providerId: string) => Gig[];
-  searchGigs: (query: string, category?: string, location?: string) => Gig[];
+  searchGigs: (query: string, category?: string, location?: string, options?: SearchGigOptions) => Gig[];
   createGig: (gig: Omit<Gig, 'id' | 'rating_avg' | 'review_count' | 'is_active' | 'created_at' | 'updated_at' | 'provider'>) => Gig;
   updateGig: (id: string, updates: Partial<Gig>) => void;
 
@@ -89,7 +97,9 @@ export const useStore = create<AppState>((set, get) => ({
       phone: null,
       bio: null,
       location: null,
+      country: null,
       is_verified: false,
+      verifications: [],
       created_at: new Date().toISOString(),
       rating_avg: 0,
       review_count: 0,
@@ -98,6 +108,9 @@ export const useStore = create<AppState>((set, get) => ({
       total_earnings: 0,
       balance: 0,
       pending_earnings: 0,
+      is_available_now: false,
+      offers_emergency: false,
+      video_intro_url: null,
     };
     set((state) => ({
       profiles: [...state.profiles, newProfile],
@@ -126,23 +139,89 @@ export const useStore = create<AppState>((set, get) => ({
     return get().gigs.filter((g) => g.provider_id === providerId);
   },
 
-  searchGigs: (query: string, category?: string, location?: string) => {
+  searchGigs: (query: string, category?: string, location?: string, options?: SearchGigOptions) => {
     let results = get().gigs.filter((g) => g.is_active);
+
     if (query) {
       const q = query.toLowerCase();
       results = results.filter(
         (g) =>
           g.title.toLowerCase().includes(q) ||
+          g.title_fr.toLowerCase().includes(q) ||
           g.description.toLowerCase().includes(q) ||
+          g.description_fr.toLowerCase().includes(q) ||
           g.category.toLowerCase().includes(q)
       );
     }
+
     if (category) {
       results = results.filter((g) => g.category === category);
     }
+
     if (location) {
       results = results.filter((g) => g.location === location);
     }
+
+    if (options) {
+      if (options.minPrice !== undefined) {
+        results = results.filter((g) => {
+          const lowestPrice = Math.min(...g.pricing_tiers.map((t) => t.price));
+          return lowestPrice >= options.minPrice!;
+        });
+      }
+
+      if (options.maxPrice !== undefined) {
+        results = results.filter((g) => {
+          const lowestPrice = Math.min(...g.pricing_tiers.map((t) => t.price));
+          return lowestPrice <= options.maxPrice!;
+        });
+      }
+
+      if (options.emergencyOnly) {
+        results = results.filter((g) => g.is_emergency);
+      }
+
+      if (options.availableNow) {
+        results = results.filter((g) => {
+          if (!g.provider) {
+            const provider = get().getProfileById(g.provider_id);
+            return provider?.is_available_now ?? false;
+          }
+          return g.provider.is_available_now;
+        });
+      }
+
+      const sortBy = options.sortBy || 'rating';
+      switch (sortBy) {
+        case 'rating':
+          results.sort((a, b) => b.rating_avg - a.rating_avg);
+          break;
+        case 'reviews':
+          results.sort((a, b) => b.review_count - a.review_count);
+          break;
+        case 'price_low':
+          results.sort((a, b) => {
+            const aMin = Math.min(...a.pricing_tiers.map((t) => t.price));
+            const bMin = Math.min(...b.pricing_tiers.map((t) => t.price));
+            return aMin - bMin;
+          });
+          break;
+        case 'price_high':
+          results.sort((a, b) => {
+            const aMin = Math.min(...a.pricing_tiers.map((t) => t.price));
+            const bMin = Math.min(...b.pricing_tiers.map((t) => t.price));
+            return bMin - aMin;
+          });
+          break;
+        case 'newest':
+          results.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          break;
+        default:
+          results.sort((a, b) => b.rating_avg - a.rating_avg);
+          break;
+      }
+    }
+
     return results;
   },
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../../store/useStore';
+import { useTranslation } from '../../lib/i18n';
 import StarRating from '../ui/StarRating';
 import toast from 'react-hot-toast';
 
@@ -12,6 +13,7 @@ export default function ReviewForm({ gigId, onDone }: ReviewFormProps) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const { user, addReview, gigs } = useStore();
+  const { t, lang } = useTranslation();
 
   const gig = gigs.find((g) => g.id === gigId);
 
@@ -19,11 +21,11 @@ export default function ReviewForm({ gigId, onDone }: ReviewFormProps) {
     e.preventDefault();
     if (!user || !gig) return;
     if (rating === 0) {
-      toast.error('Please select a rating');
+      toast.error(lang === 'fr' ? 'Veuillez choisir une note' : 'Please select a rating');
       return;
     }
     if (comment.trim().length < 10) {
-      toast.error('Review must be at least 10 characters');
+      toast.error(lang === 'fr' ? 'L\'avis doit contenir au moins 10 caracteres' : 'Review must be at least 10 characters');
       return;
     }
 
@@ -37,7 +39,7 @@ export default function ReviewForm({ gigId, onDone }: ReviewFormProps) {
       provider_response: null,
     });
 
-    toast.success('Review submitted!');
+    toast.success(lang === 'fr' ? 'Avis soumis !' : 'Review submitted!');
     setRating(0);
     setComment('');
     onDone();
@@ -45,19 +47,19 @@ export default function ReviewForm({ gigId, onDone }: ReviewFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-5">
-      <h3 className="font-medium text-gray-900 mb-4">Write a Review</h3>
+      <h3 className="font-medium text-gray-900 mb-4">{t('gig.writeReview')}</h3>
 
       <div className="mb-4">
-        <label className="block text-sm text-gray-600 mb-2">Your Rating</label>
+        <label className="block text-sm text-gray-600 mb-2">{lang === 'fr' ? 'Votre note' : 'Your Rating'}</label>
         <StarRating rating={rating} size={28} interactive onChange={setRating} />
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm text-gray-600 mb-2">Your Review</label>
+        <label className="block text-sm text-gray-600 mb-2">{lang === 'fr' ? 'Votre avis' : 'Your Review'}</label>
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="Share your experience with this service..."
+          placeholder={lang === 'fr' ? 'Partagez votre experience avec ce service...' : 'Share your experience with this service...'}
           rows={4}
           className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
         />
@@ -69,13 +71,13 @@ export default function ReviewForm({ gigId, onDone }: ReviewFormProps) {
           onClick={onDone}
           className="py-2.5 px-4 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
         >
-          Cancel
+          {t('profile.cancel')}
         </button>
         <button
           type="submit"
           className="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2.5 px-6 rounded-xl transition-colors text-sm"
         >
-          Submit Review
+          {lang === 'fr' ? 'Soumettre' : 'Submit Review'}
         </button>
       </div>
     </form>
