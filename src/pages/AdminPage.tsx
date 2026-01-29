@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Users, Briefcase, DollarSign, Star,
-  RefreshCw, Shield, Eye, EyeOff, TrendingUp, Clock,
+  RefreshCw, Shield, Eye, EyeOff, TrendingUp, Clock, Database,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from '../lib/i18n';
+import { seedDatabase } from '../lib/seedData';
 
 // ---------------------------------------------------------------------------
 // Admin PIN
@@ -87,6 +88,7 @@ export default function AdminPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [gigs, setGigs] = useState<Gig[]>([]);
   const [loading, setLoading] = useState(true);
+  const [seedStatus, setSeedStatus] = useState<'idle' | 'seeding' | 'done' | 'error'>('idle');
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
   // ---------------------------------------------------------------------------
@@ -293,6 +295,26 @@ export default function AdminPage() {
           <span className="text-xs text-gray-400 hidden sm:inline">
             {lang === 'fr' ? 'Dernière mise à jour' : 'Last updated'}: {formatTime(lastRefresh)}
           </span>
+          <button
+            onClick={async () => {
+              if (!confirm(lang === 'fr' ? 'Remplir la base avec des données d\'exemple ?' : 'Seed the database with sample data?')) return;
+              setSeedStatus('seeding');
+              try {
+                const result = await seedDatabase();
+                setSeedStatus(result.success ? 'done' : 'error');
+                alert(result.message);
+                if (result.success) fetchData();
+              } catch {
+                setSeedStatus('error');
+                alert('Seed failed');
+              }
+            }}
+            disabled={seedStatus === 'seeding'}
+            className="inline-flex items-center gap-2 text-sm font-medium text-amber-600 hover:text-amber-700 border border-amber-200 hover:border-amber-300 bg-amber-50 hover:bg-amber-100 py-2 px-4 rounded-xl transition-colors disabled:opacity-50"
+          >
+            <Database size={16} className={seedStatus === 'seeding' ? 'animate-pulse' : ''} />
+            {seedStatus === 'seeding' ? (lang === 'fr' ? 'Remplissage...' : 'Seeding...') : seedStatus === 'done' ? '✓' : 'Seed DB'}
+          </button>
           <button
             onClick={fetchData}
             disabled={loading}
