@@ -13,13 +13,18 @@ export default function LoginForm() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const loginDemo = useStore((s) => s.loginDemo);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast.error(t('auth.fillAll'));
       return;
     }
-    const success = login(email, password);
+    setLoading(true);
+    const success = await login(email, password);
+    setLoading(false);
     if (success) {
       toast.success(t('auth.welcome'));
       navigate('/');
@@ -29,12 +34,9 @@ export default function LoginForm() {
   };
 
   const handleDemoLogin = (type: 'client' | 'provider') => {
-    const demoEmail = type === 'client' ? 'ibrahim.djouma@email.com' : 'jean.paul@email.com';
-    const success = login(demoEmail, 'demo');
-    if (success) {
-      toast.success(t('auth.welcome'));
-      navigate('/');
-    }
+    loginDemo(type);
+    toast.success(t('auth.welcome'));
+    navigate('/');
   };
 
   return (

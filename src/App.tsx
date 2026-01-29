@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Layout from './components/layout/Layout';
@@ -13,8 +14,15 @@ import DashboardPage from './pages/DashboardPage';
 import ProviderProfilePage from './pages/ProviderProfilePage';
 import LoginForm from './components/auth/LoginForm';
 import SignupForm from './components/auth/SignupForm';
+import { useStore } from './store/useStore';
 
 function App() {
+  const initAuth = useStore((s) => s.initAuth);
+
+  useEffect(() => {
+    initAuth();
+  }, [initAuth]);
+
   return (
     <Router>
       <Toaster

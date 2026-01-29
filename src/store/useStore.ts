@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { Profile, Gig, Review, Booking, Order, Conversation, Message, PaymentMethod } from '../types';
+import type { Profile, Gig, Review, Booking, Order, Conversation, Message } from '../types';
+import { supabase } from '../lib/supabase';
 import {
   MOCK_PROVIDERS,
   MOCK_CLIENTS,
@@ -23,9 +24,12 @@ interface AppState {
   // Auth
   user: Profile | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => boolean;
-  signup: (name: string, email: string, password: string, role: 'client' | 'provider') => boolean;
-  logout: () => void;
+  authLoading: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  signup: (name: string, email: string, password: string, role: 'client' | 'provider') => Promise<boolean>;
+  logout: () => Promise<void>;
+  initAuth: () => Promise<void>;
+  loginDemo: (role: 'client' | 'provider') => void;
 
   // Gigs
   gigs: Gig[];
@@ -67,61 +71,149 @@ interface AppState {
   updateProfile: (id: string, updates: Partial<Profile>) => void;
 }
 
+function makeProfile(id: string, email: string, name: string, role: 'client' | 'provider'): Profile {
+  return {
+    id,
+    email,
+    full_name: name,
+    avatar_url: null,
+    role,
+    phone: null,
+    bio: null,
+    location: null,
+    country: null,
+    is_verified: false,
+    verifications: [],
+    created_at: new Date().toISOString(),
+    rating_avg: 0,
+    review_count: 0,
+    completion_rate: 0,
+    response_time: null,
+    total_earnings: 0,
+    balance: 0,
+    pending_earnings: 0,
+    is_available_now: false,
+    offers_emergency: false,
+    video_intro_url: null,
+  };
+}
+
 export const useStore = create<AppState>((set, get) => ({
   // Auth
   user: null,
   isAuthenticated: false,
+  authLoading: true,
 
-  login: (email: string, _password: string) => {
+  initAuth: async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const existing = get().profiles.find((p) => p.email === session.user.email);
+        const profile = existing || makeProfile(
+          session.user.id,
+          session.user.email || '',
+          session.user.user_metadata?.full_name || session.user.email || 'User',
+          (session.user.user_metadata?.role as 'client' | 'provider') || 'client',
+        );
+        if (!existing) {
+          set((s) => ({ profiles: [...s.profiles, profile] }));
+        }
+        set({ user: profile, isAuthenticated: true, authLoading: false });
+      } else {
+        set({ authLoading: false });
+      }
+    } catch {
+      set({ authLoading: false });
+    }
+
+    // Listen for auth changes
+    supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const existing = get().profiles.find((p) => p.email === session.user.email);
+        if (existing) {
+          set({ user: existing, isAuthenticated: true });
+        }
+      } else {
+        set({ user: null, isAuthenticated: false });
+      }
+    });
+  },
+
+  login: async (email: string, password: string) => {
+    // Try real Supabase auth first
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (!error && data.user) {
+        const existing = get().profiles.find((p) => p.email === email);
+        const profile = existing || makeProfile(
+          data.user.id,
+          email,
+          data.user.user_metadata?.full_name || email,
+          (data.user.user_metadata?.role as 'client' | 'provider') || 'client',
+        );
+        if (!existing) {
+          set((s) => ({ profiles: [...s.profiles, profile] }));
+        }
+        set({ user: profile, isAuthenticated: true });
+        return true;
+      }
+    } catch {
+      // Supabase not available, fall through to demo mode
+    }
+
+    // Fallback: demo mode with mock data
     const allProfiles = [...MOCK_PROVIDERS, ...MOCK_CLIENTS, ...get().profiles];
     const found = allProfiles.find((p) => p.email === email);
     if (found) {
       set({ user: found, isAuthenticated: true });
       return true;
     }
-    // Demo: allow any email to log in as client-1
-    if (email) {
-      set({ user: MOCK_CLIENTS[0], isAuthenticated: true });
-      return true;
-    }
     return false;
   },
 
-  signup: (name: string, email: string, _password: string, role: 'client' | 'provider') => {
-    const newProfile: Profile = {
-      id: `user-${Date.now()}`,
-      email,
-      full_name: name,
-      avatar_url: null,
-      role,
-      phone: null,
-      bio: null,
-      location: null,
-      country: null,
-      is_verified: false,
-      verifications: [],
-      created_at: new Date().toISOString(),
-      rating_avg: 0,
-      review_count: 0,
-      completion_rate: 0,
-      response_time: null,
-      total_earnings: 0,
-      balance: 0,
-      pending_earnings: 0,
-      is_available_now: false,
-      offers_emergency: false,
-      video_intro_url: null,
-    };
-    set((state) => ({
-      profiles: [...state.profiles, newProfile],
-      user: newProfile,
+  signup: async (name: string, email: string, password: string, role: 'client' | 'provider') => {
+    // Try real Supabase signup
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: name, role } },
+      });
+      if (!error && data.user) {
+        const profile = makeProfile(data.user.id, email, name, role);
+        set((s) => ({
+          profiles: [...s.profiles, profile],
+          user: profile,
+          isAuthenticated: true,
+        }));
+        return true;
+      }
+    } catch {
+      // Supabase not available, fall through to demo mode
+    }
+
+    // Fallback: local demo signup
+    const profile = makeProfile(`user-${Date.now()}`, email, name, role);
+    set((s) => ({
+      profiles: [...s.profiles, profile],
+      user: profile,
       isAuthenticated: true,
     }));
     return true;
   },
 
-  logout: () => {
+  logout: async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // ignore
+    }
     set({ user: null, isAuthenticated: false });
+  },
+
+  loginDemo: (role: 'client' | 'provider') => {
+    const profile = role === 'provider' ? MOCK_PROVIDERS[0] : MOCK_CLIENTS[0];
+    set({ user: profile, isAuthenticated: true });
   },
 
   // Gigs
@@ -266,7 +358,6 @@ export const useStore = create<AppState>((set, get) => ({
     set((state) => ({
       reviews: [...state.reviews, newReview],
     }));
-    // Update gig rating
     const gigReviews = get().reviews.filter((r) => r.gig_id === reviewData.gig_id);
     const avgRating = gigReviews.reduce((sum, r) => sum + r.rating, 0) / gigReviews.length;
     get().updateGig(reviewData.gig_id, {
@@ -386,7 +477,6 @@ export const useStore = create<AppState>((set, get) => ({
     const user = get().user;
     if (!user) throw new Error('Must be logged in');
 
-    // Check if conversation already exists
     const existing = get().conversations.find(
       (c) =>
         (c.participant_1 === user.id && c.participant_2 === otherUserId) ||

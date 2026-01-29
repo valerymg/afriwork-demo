@@ -13,9 +13,11 @@ export default function SignupForm() {
   const [role, setRole] = useState<'client' | 'provider'>('client');
   const signup = useStore((s) => s.signup);
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password) {
       toast.error(t('auth.fillAll'));
@@ -25,12 +27,14 @@ export default function SignupForm() {
       toast.error(t('auth.minChars'));
       return;
     }
-    const success = signup(name, email, password, role);
+    setLoading(true);
+    const success = await signup(name, email, password, role);
+    setLoading(false);
     if (success) {
       toast.success(t('auth.accountCreated'));
       navigate('/');
     } else {
-      toast.error('Signup failed. Try again.');
+      toast.error(lang === 'fr' ? 'Inscription échouée. Réessayez.' : 'Signup failed. Try again.');
     }
   };
 
