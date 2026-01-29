@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MessageSquare, Bell, Menu, X, Plus, LogOut, User, LayoutDashboard, Briefcase } from 'lucide-react';
+import { Search, MessageSquare, Bell, Menu, X, Plus, LogOut, User, LayoutDashboard, Briefcase, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { useStore } from '../../store/useStore';
 import { useTranslation } from '../../lib/i18n';
@@ -136,6 +136,15 @@ export default function Navbar() {
                         >
                           <Briefcase size={16} />
                           {t('nav.orders')}
+                        </Link>
+
+                        <Link
+                          to="/admin"
+                          onClick={() => setProfileDropdown(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 hover:bg-gray-50"
+                        >
+                          <Shield size={16} />
+                          Admin
                         </Link>
 
                         <div className="border-t border-gray-100 mt-1 pt-1">

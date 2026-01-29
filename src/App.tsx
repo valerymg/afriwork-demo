@@ -12,6 +12,7 @@ import MessagesPage from './pages/MessagesPage';
 import ProfilePage from './pages/ProfilePage';
 import DashboardPage from './pages/DashboardPage';
 import ProviderProfilePage from './pages/ProviderProfilePage';
+import AdminPage from './pages/AdminPage';
 import LoginForm from './components/auth/LoginForm';
 import SignupForm from './components/auth/SignupForm';
 import { useStore } from './store/useStore';
@@ -55,6 +56,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/provider/:id" element={<ProviderProfilePage />} />
+          <Route path="/admin" element={<AdminPage />} />
         </Route>
       </Routes>
     </Router>
