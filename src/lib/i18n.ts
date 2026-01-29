@@ -356,7 +356,7 @@ export const translations: Record<Lang, TranslationSet> = {
       search: 'Search',
       stats: {
         professionals: '500+ Professionals',
-        categories: '16+ Categories',
+        categories: '50+ Categories',
         jobsDone: '10 000+ Jobs Completed',
       },
     },
@@ -666,7 +666,7 @@ export const translations: Record<Lang, TranslationSet> = {
       search: 'Rechercher',
       stats: {
         professionals: '500+ Professionnels',
-        categories: '16+ Cat\u00E9gories',
+        categories: '50+ Cat\u00E9gories',
         jobsDone: '10 000+ Travaux r\u00E9alis\u00E9s',
       },
     },
