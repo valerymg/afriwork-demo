@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
+import { trackPageView } from './lib/analytics';
 import CategoriesPage from './pages/CategoriesPage';
 import GigDetailPage from './pages/GigDetailPage';
 import CreateGigPage from './pages/CreateGigPage';
@@ -16,6 +17,12 @@ import AdminPage from './pages/AdminPage';
 import LoginForm from './components/auth/LoginForm';
 import SignupForm from './components/auth/SignupForm';
 import { useStore } from './store/useStore';
+
+function PageTracker() {
+  const location = useLocation();
+  useEffect(() => { trackPageView(location.pathname); }, [location.pathname]);
+  return null;
+}
 
 function App() {
   const initAuth = useStore((s) => s.initAuth);
@@ -38,6 +45,7 @@ function App() {
           },
         }}
       />
+      <PageTracker />
       <Routes>
         {/* Auth routes (no layout) */}
         <Route path="/login" element={<LoginForm />} />

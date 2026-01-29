@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   MapPin, Clock, Star, Shield, MessageSquare, Calendar,
-  Check, ChevronRight, ArrowLeft, Zap, CircleDot,
+  Check, ChevronRight, ArrowLeft, Zap, CircleDot, Share2,
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { CATEGORIES, LOCATIONS } from '../lib/constants';
@@ -208,6 +208,42 @@ export default function GigDetailPage() {
               >
                 <MessageSquare size={16} />
                 {t('gig.contact')} {provider.full_name.split(' ')[0]}
+              </button>
+
+              {/* WhatsApp Contact */}
+              {provider.phone && (
+                <a
+                  href={`https://wa.me/${provider.phone.replace(/\s+/g, '').replace('+', '')}?text=${encodeURIComponent(
+                    lang === 'fr'
+                      ? `Bonjour ${provider.full_name.split(' ')[0]}, je suis intéressé(e) par votre service "${gig.title_fr || gig.title}" sur AfriWork.`
+                      : `Hi ${provider.full_name.split(' ')[0]}, I'm interested in your "${gig.title}" service on AfriWork.`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm font-medium transition-colors"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 00.611.611l4.458-1.496A11.953 11.953 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-2.319 0-4.465-.753-6.209-2.032l-.354-.27-3.206 1.074 1.074-3.206-.27-.354A9.954 9.954 0 012 12C2 6.486 6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z"/></svg>
+                  WhatsApp
+                </a>
+              )}
+
+              {/* Share Button */}
+              <button
+                onClick={() => {
+                  const shareText = lang === 'fr'
+                    ? `Découvrez ce service sur AfriWork: ${gig.title_fr || gig.title} - ${formatPrice(gig.pricing_tiers[0]?.price || 0)}`
+                    : `Check out this service on AfriWork: ${gig.title} - ${formatPrice(gig.pricing_tiers[0]?.price || 0)}`;
+                  const shareUrl = `${window.location.origin}/gig/${gig.id}`;
+                  if (navigator.share) {
+                    navigator.share({ title: gig.title, text: shareText, url: shareUrl });
+                  } else {
+                    window.open(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`, '_blank');
+                  }
+                }}
+                className="mt-2 w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Share2 size={16} />
+                {lang === 'fr' ? 'Partager ce service' : 'Share this service'}
               </button>
             </div>
           )}
