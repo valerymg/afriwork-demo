@@ -80,6 +80,7 @@ export default function BookingModal({ gig, tier, onClose }: BookingModalProps) 
       payment_intent_id: `pi_mock_${Date.now()}`,
       payment_status: 'held',
       status: 'paid',
+      dispute_reason: null,
       booking,
     });
 
