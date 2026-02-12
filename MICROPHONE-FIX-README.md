@@ -1,11 +1,20 @@
-# Microphone Volume Fix for WhatsApp and Video Calls
+# Microphone Volume & Internet Fix for WhatsApp and Video Calls
 
 ## Problem Description
 
-When using WhatsApp (Web or Desktop) for voice/video calls on Linux, your conversation partner may complain that your volume is too low. This is a common issue related to microphone input levels and audio system configuration.
+When using WhatsApp (Web or Desktop) for voice/video calls on Linux, your conversation partner may complain that your volume is too low or that your voice sounds choppy/robotic. This can be caused by **TWO main issues**:
+
+### 1. Microphone Configuration Issues
+Low microphone volume due to audio system settings
+
+### 2. Internet Connection Issues
+Poor call quality due to slow or unstable internet
+
+**IMPORTANT**: Low internet speed (especially upload speed) can make your voice sound unclear to others, even if your microphone is configured correctly!
 
 ## Common Causes
 
+### Audio Configuration Issues:
 1. **Low Input Volume**: Microphone capture volume set too low (< 50%)
 2. **Disabled Microphone Boost**: Hardware boost not enabled in ALSA
 3. **Wrong Input Source**: System using incorrect microphone (e.g., laptop using external mic port instead of internal mic)
@@ -14,11 +23,22 @@ When using WhatsApp (Web or Desktop) for voice/video calls on Linux, your conver
 6. **Missing Echo Cancellation**: Causes feedback and volume reduction
 7. **Browser Permissions**: Browser not granted proper microphone access
 
+### Internet Connection Issues:
+1. **Low Upload Speed**: < 1 Mbps upload (YOUR voice is unclear to others)
+2. **Low Download Speed**: < 1 Mbps download (You can't hear others clearly)
+3. **High Latency**: > 150ms causes delays and echo
+4. **Packet Loss**: > 1% causes choppy, robotic voice
+5. **Unstable Connection**: WiFi drops or interference
+6. **Bandwidth Competition**: Other apps consuming bandwidth
+7. **Poor WiFi Signal**: Distance from router or interference
+
 ## Solution Overview
 
-This repository contains two scripts to diagnose and fix microphone volume issues:
+This repository contains **FOUR scripts** to diagnose and fix both microphone and internet issues:
 
-### 1. Diagnostic Script (`diagnose-microphone.sh`)
+### Audio Configuration Scripts:
+
+#### 1. Microphone Diagnostic Script (`diagnose-microphone.sh`)
 
 Analyzes your current audio configuration and identifies issues.
 
@@ -36,7 +56,7 @@ chmod +x diagnose-microphone.sh
 - Microphone boost settings
 - Common configuration issues
 
-### 2. Fix Script (`fix-microphone-volume.sh`)
+#### 2. Microphone Fix Script (`fix-microphone-volume.sh`)
 
 Automatically applies optimal settings for WhatsApp and video calls.
 
@@ -54,20 +74,106 @@ chmod +x fix-microphone-volume.sh
 - Enables Automatic Gain Control (AGC)
 - Sets echo-cancelled source as default
 
+### Internet Connection Scripts:
+
+#### 3. Internet Diagnostic Script (`diagnose-internet.sh`)
+
+Tests your internet connection quality for WhatsApp calls.
+
+**Usage:**
+```bash
+chmod +x diagnose-internet.sh
+./diagnose-internet.sh
+```
+
+**What it checks:**
+- Internet connectivity and DNS resolution
+- Download/upload bandwidth (Mbps)
+- Latency (ping time)
+- Packet loss percentage
+- Network stability
+- WhatsApp server connectivity
+- WiFi signal strength
+- Active network interface
+
+#### 4. Internet Optimization Script (`fix-internet-for-calls.sh`)
+
+Optimizes your internet connection for better call quality.
+
+**Usage:**
+```bash
+chmod +x fix-internet-for-calls.sh
+# Some optimizations require root:
+sudo ./fix-internet-for-calls.sh
+```
+
+**What it does:**
+- Configures fast DNS servers (Google DNS)
+- Sets up QoS to prioritize VoIP traffic
+- Detects bandwidth-consuming apps
+- Optimizes WiFi settings
+- Disables WiFi power management
+- Provides browser optimization tips
+- Tests optimized connection
+
+## WhatsApp Call Requirements
+
+Before troubleshooting, ensure your system meets these minimum requirements:
+
+### Microphone Requirements:
+- ✅ Working microphone (built-in or external)
+- ✅ Proper audio drivers installed
+- ✅ Microphone not muted
+- ✅ Input volume > 50%
+
+### Internet Requirements (CRITICAL):
+- ✅ **Upload speed: 1+ Mbps** (for voice), 1.5+ Mbps (for video)
+- ✅ **Download speed: 1+ Mbps** (for voice), 1.5+ Mbps (for video)
+- ✅ **Latency: < 150ms**
+- ✅ **Packet loss: < 1%**
+- ✅ Stable connection without drops
+
+**⚠️ IMPORTANT**: Low **upload speed** is the #1 reason others can't hear you clearly, even with perfect microphone settings!
+
 ## Quick Fix Guide
 
-### Step 1: Run Diagnostic
+### FULL DIAGNOSTIC (Recommended):
+
+#### Step 1: Check Internet Connection FIRST
 ```bash
+chmod +x diagnose-internet.sh
+./diagnose-internet.sh
+```
+
+**Why first?** Because if your internet is too slow, no amount of microphone tweaking will help!
+
+Look for:
+- Upload speed < 1 Mbps → ❌ YOUR VOICE WILL BE UNCLEAR
+- High latency > 150ms → ❌ Delays and echo
+- Packet loss > 1% → ❌ Choppy, robotic sound
+
+#### Step 2: Check Microphone Configuration
+```bash
+chmod +x diagnose-microphone.sh
 ./diagnose-microphone.sh > mic-report.txt
 cat mic-report.txt
 ```
 
-### Step 2: Apply Fix
+#### Step 3: Apply Fixes
+
+If internet is the problem:
 ```bash
+chmod +x fix-internet-for-calls.sh
+sudo ./fix-internet-for-calls.sh
+```
+
+If microphone is the problem:
+```bash
+chmod +x fix-microphone-volume.sh
 ./fix-microphone-volume.sh
 ```
 
-### Step 3: Test Your Microphone
+#### Step 4: Test Your Microphone
 ```bash
 # Record 5 seconds of audio
 arecord -d 5 -f cd test.wav
@@ -76,8 +182,8 @@ arecord -d 5 -f cd test.wav
 aplay test.wav
 ```
 
-### Step 4: Test in WhatsApp
-Make a test call and ask your contact if the volume is better.
+#### Step 5: Test in WhatsApp
+Make a test call and ask your contact if the quality is better.
 
 ## Manual Configuration
 
@@ -252,6 +358,89 @@ pactl list sources short
 # Set specific source as default
 pactl set-default-source <source-name>
 ```
+
+## Internet Connection Troubleshooting
+
+### Issue: Voice sounds choppy, robotic, or cuts out
+**Most likely cause**: Poor internet connection, NOT microphone!
+
+**Diagnosis:**
+```bash
+./diagnose-internet.sh
+```
+
+**Solutions:**
+
+1. **Low Upload Speed** (< 1 Mbps):
+   - Close bandwidth-heavy apps (torrents, YouTube, Netflix)
+   - Pause cloud sync (Dropbox, Google Drive)
+   - Stop system updates
+   - Use wired connection instead of WiFi
+   - Contact ISP for better plan
+
+2. **High Latency** (> 150ms):
+   - Move closer to WiFi router
+   - Switch to wired ethernet
+   - Change DNS to 8.8.8.8 or 1.1.1.1
+   - Close VPN if not needed
+   - Restart router
+
+3. **Packet Loss** (> 1%):
+   - Check WiFi signal strength
+   - Update router firmware
+   - Change WiFi channel (less interference)
+   - Use 5GHz band instead of 2.4GHz
+   - Check for loose cables
+
+4. **Unstable Connection**:
+   - Disable WiFi power management
+   - Move away from interference sources (microwave, cordless phones)
+   - Use WiFi extender or mesh system
+   - Consider mobile hotspot as backup
+
+### Issue: Others say my voice is unclear, but tests show good internet
+**Solutions:**
+```bash
+# Test actual upload during a call
+# In another terminal while on call:
+speedtest-cli
+
+# If upload drops during calls:
+# 1. Close other apps
+# 2. Use QoS on router to prioritize VoIP
+# 3. Reduce video quality in WhatsApp
+```
+
+### Issue: Connection works for browsing but not for calls
+**Cause**: VoIP requires consistent bandwidth, not just high speed.
+
+**Solutions:**
+- Enable QoS (Quality of Service) on router
+- Prioritize UDP ports: 3478, 45395, 50318, 59234
+- Disable router's SIP ALG if available
+- Use wired connection
+
+### Issue: Calls work on mobile data but not WiFi
+**Solutions:**
+```bash
+# Check if router is blocking VoIP
+sudo tcpdump -i any port 5222 or port 3478
+
+# If blocked, configure router to allow WhatsApp ports:
+# TCP: 80, 443, 5222
+# UDP: 3478, 45395, 50318, 59234
+```
+
+### Quick Internet Optimization Checklist:
+- [ ] Close all apps except WhatsApp
+- [ ] Pause downloads/uploads
+- [ ] Stop streaming services
+- [ ] Move closer to WiFi router (or use ethernet)
+- [ ] Turn off video if voice is more important
+- [ ] Set WhatsApp to never auto-download media
+- [ ] Restart router if connection is slow
+- [ ] Switch to 5GHz WiFi if available
+- [ ] Test during off-peak hours
 
 ## Hardware Considerations
 
